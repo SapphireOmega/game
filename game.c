@@ -11,6 +11,9 @@
 #include <GL/glx.h>
 #include <X11/Xlib.h>
 
+#include "util.h"
+#include "imgload.h"
+
 /* macros */
 #define GLEW_STATIC
 #define GLX_CONTEXT_MAJOR_VERSION_ARB 0x2091
@@ -24,7 +27,6 @@ typedef GLXContext (*glXCreateContextAttribsARBProc)
 enum shader_type { VERTEX, FRAGMENT, NONE };
 
 /* function declarations */
-static void die(const char *fmt, ...);
 static void check_glx_version(void);
 static void match_fb_configs(GLXFBConfig **fbc, int *fbcnt);
 static GLXFBConfig get_best_fb_config(GLXFBConfig *fbc, int fbcnt);
@@ -51,29 +53,26 @@ static XWindowAttributes window_attribs;
 static Window window;
 static Atom delete_window;
 static bool context_error = false;
-static GLuint pos_attrib;
+static GLXContext render_context;
 static GLuint shader_program;
 static GLuint vao;
 static GLuint vbo;
-static GLXContext render_context;
+static GLuint ebo;
+static struct tga_file test_image;
+static GLuint tex;
 
 static const float vertices[] = {
-	 0.0f,  0.5f,
-	 0.5f, -0.5f,
-	-0.5f, -0.5f,
+/*      pos           color             texcoords */
+	-0.5f,  0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
+	 0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+	 0.5f, -0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
+	-0.5f, -0.5f, 1.0f, 0.5f, 0.5f, 0.0f, 0.0f,
 };
 
-void
-die(const char *fmt, ...)
-{
-	va_list ap;
-
-	va_start(ap, fmt);
-	vfprintf(stderr, fmt, ap);
-	va_end(ap);
-
-	exit(EXIT_FAILURE);
-}
+static const GLuint elements[] = {
+	0, 1, 2,
+	2, 3, 0,
+};
 
 void
 check_glx_version(void)
@@ -402,6 +401,7 @@ setup(void)
 	GLXFBConfig fbc;
 	XVisualInfo *vi;
 	char *vs_src, *fs_src;
+	GLint pos_attrib, col_attrib, tex_attrib, status;
 
 	if (!(display = XOpenDisplay(NULL)))
 		die("cannot open display\n");
@@ -427,16 +427,46 @@ setup(void)
 	printf("creating vertex buffer\n");
 	glGenBuffers(1, &vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices,
+	             GL_STATIC_DRAW);
+
+	printf("creating element buffer\n");
+	glGenBuffers(1, &ebo);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements), elements,
+	             GL_STATIC_DRAW);
 
 	printf("creating shader program\n");
 	parse_shader("res/shaders/shader.glsl", &vs_src, &fs_src);
 	shader_program = create_shader_program(vs_src, fs_src);
 	glUseProgram(shader_program);
 
-	pos_attrib = glGetAttribLocation(shader_program, "pos");
-	glVertexAttribPointer(pos_attrib, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	pos_attrib = glGetAttribLocation(shader_program, "position");
 	glEnableVertexAttribArray(pos_attrib);
+	glVertexAttribPointer(pos_attrib, 2, GL_FLOAT, GL_FALSE,
+	                      7 * sizeof(float), 0);
+
+	col_attrib = glGetAttribLocation(shader_program, "vcolor");
+	glEnableVertexAttribArray(col_attrib);
+	glVertexAttribPointer(col_attrib, 3, GL_FLOAT, GL_FALSE,
+	                      7 * sizeof(float), (void *)(2 * sizeof(float)));
+
+	tex_attrib = glGetAttribLocation(shader_program, "vtexcoord");
+	glEnableVertexAttribArray(tex_attrib);
+	glVertexAttribPointer(tex_attrib, 2, GL_FLOAT, GL_FALSE,
+	                      7 * sizeof(float), (void *)((5 * sizeof(float))));
+
+	if (!load_tga_file(&test_image, "res/textures/test.tga"))
+		die("error loading tga file: %s\n", img_strerror(img_err));
+
+	glGenTextures(1, &tex);
+	glBindTexture(GL_TEXTURE_2D, tex);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
+	             test_image.width, test_image.height,
+		     0, GL_RGBA, GL_FLOAT, test_image.data);
 }
 
 void
@@ -469,10 +499,11 @@ handle_events(void)
 void
 render(void)
 {
-	glClearColor(0.0, 0.5, 0.5, 1.0);
+	glClearColor(0.0, 0.7, 0.7, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	glDrawArrays(GL_TRIANGLES, 0, 3);
+	glDrawElements(GL_TRIANGLES, sizeof(elements) / sizeof(GLuint),
+	               GL_UNSIGNED_INT, 0);
 
 	glXSwapBuffers(display, window);
 }
