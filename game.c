@@ -440,6 +440,7 @@ setup(void)
 	parse_shader("res/shaders/shader.glsl", &vs_src, &fs_src);
 	shader_program = create_shader_program(vs_src, fs_src);
 	glUseProgram(shader_program);
+	printf("shader program created\n");
 
 	pos_attrib = glGetAttribLocation(shader_program, "position");
 	glEnableVertexAttribArray(pos_attrib);
