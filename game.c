@@ -1,10 +1,12 @@
 #include <errno.h>
+#include <math.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/timeb.h>
 
 #include <GL/glew.h>
 #include <GL/glu.h>
@@ -13,6 +15,7 @@
 
 #include "util.h"
 #include "imgload.h"
+#include "trans.h"
 
 /* macros */
 #define GLEW_STATIC
@@ -45,6 +48,7 @@ static void cleanup(void);
 static void exit_game(void);
 
 /* variables */
+static struct timeb start_time, curr_time;
 static Display *display;
 static int screen_id;
 static Window root_window;
@@ -403,6 +407,8 @@ setup(void)
 	char *vs_src, *fs_src;
 	GLint pos_attrib, col_attrib, tex_attrib, status;
 
+	ftime(&start_time);
+
 	if (!(display = XOpenDisplay(NULL)))
 		die("cannot open display\n");
 
@@ -500,6 +506,75 @@ handle_events(void)
 void
 render(void)
 {
+	matrix *trans;
+	matrix *rot1;
+	matrix *rot2;
+	vector *axis1;
+	vector *axis2;
+	GLint trans_uni;
+	int diff;
+
+	ftime(&curr_time);
+
+	diff = (int)(1000.0 * (curr_time.time - start_time.time)
+		+ (curr_time.millitm - start_time.millitm));
+
+	//const float rrot1[] = {
+	//	(float)cos((double)diff / 500.0), -(float)sin((double)diff / 500.0), 0.0f, 0.0f,
+	//	(float)sin((double)diff / 500.0),  (float)cos((double)diff / 500.0), 0.0f, 0.0f,
+	//	0.0f, 0.0f, 1.0f, 0.0f,
+	//	0.0f, 0.0f, 0.0f, 1.0f,
+	//};
+
+	//const float rrot2[] = {
+	//	1.0f, 0.0f, 0.0f, 0.0f,
+	//	0.0f, (float)cos(0.25 * M_PI), -(float)sin(0.25 * M_PI), 0.0f,
+	//	0.0f, (float)sin(0.25 * M_PI), (float)cos(0.25 * M_PI), 0.0f,
+	//	0.0f, 0.0f, 0.0f, 1.0f,
+	//};
+
+	//const float rrot1[] = {
+	//	(float)cos((double)diff / 1000.0), -(float)sin((double)diff / 1000.0), 0.0f, 0.0f,
+	//	(float)sin((double)diff / 1000.0),  (float)cos((double)diff / 1000.0), 0.0f, 0.0f,
+	//	0.0f,            0.0f,           1.0f, 0.0f,
+	//	0.0f,            0.0f,           0.0f, 1.0f,
+	//};
+
+	//const float rrot2[] = {
+	//	(float)cos((double)diff / 1000.0 * 0.6), 0.0f, (float)sin((double)diff / 1000.0 * 0.6), 0.0f,
+	//	0.0f, 1.0f, 0.0f, 0.0f,
+	//	-(float)sin((double)diff / 1000.0 * 0.6), 0.0f, (float)cos((double)diff / 1000.0 * 0.6), 0.0f,
+	//	0.0f, 0.0f, 0.0f, 1.0f,
+	//};
+
+	axis1 = create_vector(3);
+	if (!axis1)
+		die("error creating vector\n");
+	axis1->val[0] = 1.0f;
+	axis1->val[1] = 0.0f;
+	axis1->val[2] = 0.0f;
+	rot1 = create_simple_matrix(4, 4, 1.0f);
+	if (!rot1)
+		die("error creating matrix\n");
+	rot1 = rotate(rot1, 0.25f * M_PI, axis1);
+	axis2 = create_vector(3);
+	if (!axis2)
+		die("error creating vector\n");
+	axis2->val[0] = 1.0f;
+	axis2->val[1] = 0.0f;
+	axis2->val[2] = 1.0f;
+	rot2 = create_simple_matrix(4, 4, 1.0f);
+	if (!rot2)
+		die("error creating matrix\n");
+	rot2 = rotate(rot2, diff / 500.0f, axis2);
+	//trans = matrix_matrix_product(rot2, rot1);
+	trans = rot2;
+	if (!trans)
+		die("matrix multiplication failed");
+
+	trans_uni = glGetUniformLocation(shader_program, "trans");
+	glUniformMatrix4fv(trans_uni, 1, GL_FALSE, trans->val);
+
 	glClearColor(0.0, 0.7, 0.7, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT);
 

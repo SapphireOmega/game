@@ -10,11 +10,13 @@ in vec2 vtexcoord;
 out vec3 fcolor;
 out vec2 ftexcoord;
 
+uniform mat4 trans;
+
 void main()
 {
 	fcolor = vcolor;
 	ftexcoord = vtexcoord;
-	gl_Position = vec4(position, 0.0, 1.0);
+	gl_Position = trans * vec4(position, 0.0, 1.0);
 }
 
 #shader fragment
