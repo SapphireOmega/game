@@ -547,30 +547,44 @@ render(void)
 	//	0.0f, 0.0f, 0.0f, 1.0f,
 	//};
 
+
 	axis1 = create_vector(3);
 	if (!axis1)
 		die("error creating vector\n");
-	axis1->val[0] = 1.0f;
+	axis1->val[0] = 0.707f;
 	axis1->val[1] = 0.0f;
-	axis1->val[2] = 0.0f;
+	axis1->val[2] = 0.707f;
 	rot1 = create_simple_matrix(4, 4, 1.0f);
 	if (!rot1)
 		die("error creating matrix\n");
-	rot1 = rotate(rot1, 0.25f * M_PI, axis1);
-	axis2 = create_vector(3);
-	if (!axis2)
-		die("error creating vector\n");
-	axis2->val[0] = 1.0f;
-	axis2->val[1] = 0.0f;
-	axis2->val[2] = 1.0f;
-	rot2 = create_simple_matrix(4, 4, 1.0f);
-	if (!rot2)
-		die("error creating matrix\n");
-	rot2 = rotate(rot2, diff / 500.0f, axis2);
+	rot1 = rotate(rot1, diff / 500.0f, axis1);
+	//axis2 = create_vector(3);
+	//if (!axis2)
+	//	die("error creating vector\n");
+	//axis2->val[0] = 1.0f;
+	//axis2->val[1] = 1.0f;
+	//axis2->val[2] = 0.5f;
+	//rot2 = create_simple_matrix(4, 4, 1.0f);
+	//if (!rot2)
+	//	die("error creating matrix\n");
+	//rot2 = rotate(rot2, diff / 500.0f, axis2);
 	//trans = matrix_matrix_product(rot2, rot1);
-	trans = rot2;
+	trans = rot1;
 	if (!trans)
 		die("matrix multiplication failed");
+
+	//print_matrix(trans);
+	//printf("%f\n", diff / 500.0f);
+	//printf("\n");
+	//
+	//vector *test = create_vector(4);
+	//test->val[0] = -0.5f;
+	//test->val[1] = 0.5f;
+	//test->val[2] = 0.0f;
+	//test->val[3] = 1.0f;
+	//printf("%f\n", diff / 500.0f);
+	//print_vector(matrix_vector_product(trans, test));
+	//printf("\n");
 
 	trans_uni = glGetUniformLocation(shader_program, "trans");
 	glUniformMatrix4fv(trans_uni, 1, GL_FALSE, trans->val);

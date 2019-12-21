@@ -1,0 +1,50 @@
+getting matching framebuffer configs
+found 14 matching FB configs
+getting XVisualInfos
+matching fbconfig 0, visual ID 0x21: SAMPLE_BUFFERS = 0, SAMPLE = 0
+matching fbconfig 1, visual ID 0x10c: SAMPLE_BUFFERS = 0, SAMPLE = 0
+matching fbconfig 2, visual ID 0x10e: SAMPLE_BUFFERS = 0, SAMPLE = 0
+matching fbconfig 3, visual ID 0x112: SAMPLE_BUFFERS = 0, SAMPLE = 0
+matching fbconfig 4, visual ID 0x116: SAMPLE_BUFFERS = 1, SAMPLE = 4
+matching fbconfig 5, visual ID 0x11e: SAMPLE_BUFFERS = 1, SAMPLE = 4
+matching fbconfig 6, visual ID 0x117: SAMPLE_BUFFERS = 1, SAMPLE = 8
+matching fbconfig 7, visual ID 0x11f: SAMPLE_BUFFERS = 1, SAMPLE = 8
+matching fbconfig 8, visual ID 0x10f: SAMPLE_BUFFERS = 0, SAMPLE = 0
+matching fbconfig 9, visual ID 0x113: SAMPLE_BUFFERS = 0, SAMPLE = 0
+matching fbconfig 10, visual ID 0xa4: SAMPLE_BUFFERS = 0, SAMPLE = 0
+matching fbconfig 11, visual ID 0x142: SAMPLE_BUFFERS = 0, SAMPLE = 0
+matching fbconfig 12, visual ID 0x144: SAMPLE_BUFFERS = 0, SAMPLE = 0
+matching fbconfig 13, visual ID 0x145: SAMPLE_BUFFERS = 0, SAMPLE = 0
+chosen visual id = 0x117
+mapping window
+creating context
+direct GLX rendering context obtained
+making context current
+initializing glew
+creating vertex array
+creating vertex buffer
+creating element buffer
+creating shader program
+compiling vertex shader
+compiling fragment shader
+shader program created
+0.999932 0.000058 0.010799 0.000000 
+0.000058 0.999932 -0.010799 0.000000 
+-0.010799 0.010799 0.999767 0.000000 
+0.000000 0.000000 0.000000 1.000000 
+0.021600
+
+0.972895 0.023135 0.210070 0.000000 
+0.023135 0.972895 -0.210070 0.000000 
+-0.210070 0.210070 0.907459 0.000000 
+0.000000 0.000000 0.000000 1.000000 
+0.433600
+
+0.903994 0.081946 0.370178 0.000000 
+0.081946 0.903994 -0.370178 0.000000 
+-0.370178 0.370178 0.672215 0.000000 
+0.000000 0.000000 0.000000 1.000000 
+0.833600
+
+dropping unhandled XEvent.type = 2
+dropping unhandled XEvent.type = 2

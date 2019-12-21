@@ -34,7 +34,8 @@ vector *vector_from_matrix(const matrix *mat, int i);
 matrix *matrix_scalar_product(const matrix *mat, float s);
 vector *matrix_vector_product(const matrix *mat, const vector *vec);
 matrix *matrix_matrix_product(const matrix *mat1, const matrix *mat2);
-matrix *rotate(const matrix *mat, float angle, const vector *vec);
+matrix *rotate(const matrix *mat, float a, const vector *vec);
+matrix *matrix_from_axis_angle(float a, const vector *vec);
 void print_vector(const vector *vec);
 void print_matrix(const matrix *mat);
 

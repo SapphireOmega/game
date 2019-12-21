@@ -188,53 +188,89 @@ matrix_matrix_product(const matrix *mat1, const matrix *mat2)
 }
 
 matrix *
-rotate(const matrix *mat, float angle, const vector *vec)
+rotate(const matrix *mat, float a, const vector *vec)
+{
+	// matrix *res;
+	// matrix *rotx;
+	// matrix *roty;
+	// matrix *rotz;
+
+	// rotx = create_matrix(4, 4);
+	// roty = create_matrix(4, 4);
+	// rotz = create_matrix(4, 4);
+	// if (!vec || vec->i != 3 || !rotx || !roty || !rotz)
+	// 	return NULL;
+
+	// const float rrotx[] = {
+	// 	1.0f, 0.0f, 0.0f, 0.0f,
+	// 	0.0f, cosf(angle * vec->val[0]), -sinf(angle * vec->val[0]), 0.0f,
+	// 	0.0f, sinf(angle * vec->val[0]), cosf(angle * vec->val[0]), 0.0f,
+	// 	0.0f, 0.0f, 0.0f, 1.0f,
+	// };
+
+	// const float rroty[] = {
+	// 	cosf(angle * vec->val[1]), 0.0f, sinf(angle * vec->val[1]), 0.0f,
+	// 	0.0f, 1.0f, 0.0f, 0.0f,
+	// 	-sinf(angle * vec->val[1]), 0.0f, cosf(angle * vec->val[1]), 0.0f,
+	// 	0.0f, 0.0f, 0.0f, 1.0f,
+	// };
+
+	// const float rrotz[] = {
+	// 	cosf(angle * vec->val[2]), -sinf(angle * vec->val[2]), 0.0f, 0.0f,
+	// 	sinf(angle * vec->val[2]), cosf(angle * vec->val[2]), 0.0f, 0.0f,
+	// 	0.0f, 0.0f, 1.0f, 0.0f,
+	// 	0.0f, 0.0f, 0.0f, 1.0f,
+	// };
+
+	// copy_matrix_data(rotx, rrotx);
+	// copy_matrix_data(roty, rroty);
+	// copy_matrix_data(rotz, rrotz);
+
+	// res = matrix_matrix_product(roty, rotz);
+	// res = matrix_matrix_product(res, rotx);
+	// res = matrix_matrix_product(res, mat);
+	
+	matrix *res;
+	matrix *rot;
+
+	rot = matrix_from_axis_angle(a, vec);
+	res = matrix_matrix_product(mat, rot);
+
+	return res;
+}
+
+matrix *
+matrix_from_axis_angle(float a, const vector *vec)
 {
 	matrix *res;
-	matrix *rotx;
-	matrix *roty;
-	matrix *rotz;
 
-	rotx = create_matrix(4, 4);
-	roty = create_matrix(4, 4);
-	rotz = create_matrix(4, 4);
-	if (!vec || vec->i != 3 || !rotx || !roty || !rotz)
+	if (vec->i != 3)
 		return NULL;
 
-	const float rrotx[] = {
-		1.0f, 0.0f, 0.0f, 0.0f,
-		0.0f, (float)cos((double)angle * (double)vec->val[0]),
-			-(float)sin((double)angle * (double)vec->val[0]), 0.0f,
-		0.0f, (float)sin((double)angle * (double)vec->val[0]),
-			(float)cos((double)angle * (double)vec->val[0]), 0.0f,
-		0.0f, 0.0f, 0.0f, 1.0f,
+	const float rres[] = {
+		/* row 1 */
+		cosf(a) + powf(vec->val[0], 2.0f) * (1.0f - cosf(a)),
+		vec->val[0] * vec->val[1] * (1.0f - cosf(a)) - vec->val[2] * sinf(a),
+		vec->val[0] * vec->val[2] * (1.0f - cosf(a)) + vec->val[1] * sinf(a),
+		0.0f,
+		/* row 2 */
+		vec->val[1] * vec->val[0] * (1.0f - cosf(a)) + vec->val[2] * sinf(a),
+		cosf(a) + powf(vec->val[1], 2.0f) * (1.0f - cosf(a)),
+		vec->val[1] * vec->val[2] * (1.0f - cosf(a)) - vec->val[0] * sinf(a),
+		0.0f,
+		/* row 3 */
+		vec->val[2] * vec->val[0] * (1.0f - cosf(a)) - vec->val[1] * sinf(a),
+		vec->val[2] * vec->val[1] * (1.0f - cosf(a)) + vec->val[0] * sinf(a),
+		cosf(a) + powf(vec->val[2], 2.0f) * (1.0f - cosf(a)),
+		0.0f,
+		/* row 4 */
+		0.0f, 0.0f, 0.0f, 1.0f
 	};
 
-	const float rroty[] = {
-		(float)cos((double)angle * (double)vec->val[1]), 0.0f,
-			(float)sin((double)angle * (double)vec->val[1]), 0.0f,
-		0.0f, 1.0f, 0.0f, 0.0f,
-		-(float)sin((double)angle * (double)vec->val[1]), 0.0f,
-			(float)cos((double)angle * (double)vec->val[1]), 0.0f,
-		0.0f, 0.0f, 0.0f, 1.0f,
-	};
-
-	const float rrotz[] = {
-		(float)cos((double)angle * (double)vec->val[2]),
-			-(float)sin((double)angle * (double)vec->val[2]), 0.0f, 0.0f,
-		(float)sin((double)angle * (double)vec->val[2]),
-			(float)cos((double)angle * (double)vec->val[2]), 0.0f, 0.0f,
-		0.0f, 0.0f, 1.0f, 0.0f,
-		0.0f, 0.0f, 0.0f, 1.0f,
-	};
-
-	copy_matrix_data(rotx, rrotx);
-	copy_matrix_data(roty, rroty);
-	copy_matrix_data(rotz, rrotz);
-
-	res = matrix_matrix_product(roty, rotz);
-	res = matrix_matrix_product(res, rotx);
-	res = matrix_matrix_product(res, mat);
+	res = create_matrix(4, 4);
+	if (!res)
+		return NULL;
+	copy_matrix_data(res, rres);
 
 	return res;
 }
