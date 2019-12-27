@@ -27,6 +27,7 @@ vector *create_vector(int i);
 void copy_vector_data(vector *vec, const float *data);
 vector *vector_scalar_product(const vector *vec, float s);
 bool vector_vector_product(float *res, const vector *vec1, const vector *vec2);
+vector *normalize_vector(const vector *vec);
 matrix *create_matrix(int i, int j);
 matrix *create_simple_matrix(int i, int j, float s);
 void copy_matrix_data(matrix *mat, const float *data);

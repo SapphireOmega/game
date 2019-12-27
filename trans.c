@@ -61,6 +61,25 @@ vector_vector_product(float *res, const vector *vec1, const vector *vec2)
 	return true;
 }
 
+vector *
+normalize_vector(const vector *vec)
+{
+	vector *res;
+	int i;
+	float sum, len; /* sum is the sum of squares */
+
+	res = create_vector(vec->i);
+	sum = 0.0f;
+
+	for (i = 0; i < vec->i; i++)
+		sum += powf(vec->val[i], 2.0f);
+	len = sqrtf(sum);
+	for (i = 0; i < vec->i; i++)
+		res->val[i] = vec->val[i] / len;
+
+	return res;
+}
+
 matrix *
 create_matrix(int i, int j)
 {

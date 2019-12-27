@@ -551,9 +551,10 @@ render(void)
 	axis1 = create_vector(3);
 	if (!axis1)
 		die("error creating vector\n");
-	axis1->val[0] = 0.707f;
+	axis1->val[0] = 1.0f;
 	axis1->val[1] = 0.0f;
-	axis1->val[2] = 0.707f;
+	axis1->val[2] = 1.0f;
+	axis1 = normalize_vector(axis1);
 	rot1 = create_simple_matrix(4, 4, 1.0f);
 	if (!rot1)
 		die("error creating matrix\n");
