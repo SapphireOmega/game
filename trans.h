@@ -16,25 +16,23 @@ typedef struct {
 } matrix;
 
 /* function declarations */
-vector *create_vector(int i);
-void copy_vector_data(vector *vec, const float *data);
-vector *vector_scalar_product(const vector *vec, float s);
-bool vector_vector_product(float *res, const vector *vec1, const vector *vec2);
-vector *normalize_vector(const vector *vec);
-matrix *create_matrix(int i, int j);
-matrix *create_simple_matrix(int i, int j, float s);
-void copy_matrix_data(matrix *mat, const float *data);
-vector *vector_from_matrix(const matrix *mat, int i);
-matrix *matrix_scalar_product(const matrix *mat, float s);
-vector *matrix_vector_product(const matrix *mat, const vector *vec);
-matrix *matrix_matrix_product(const matrix *mat1, const matrix *mat2);
-matrix *transpose(const matrix *mat);
-float determinant(const matrix *mat);
-sldkfjsldfjlsdk
-sefwsefw
-matrix *rotate(const matrix *mat, float a, const vector *vec);
-matrix *matrix_from_axis_angle(float a, const vector *vec);
-void print_vector(const vector *vec);
-void print_matrix(const matrix *mat);
+bool create_vector(vector *vec, int i);
+void copy_vector_data(vector vec, const float *data);
+bool vector_scalar_product(vector *res, vector vec, float s);
+bool vector_vector_product(float *res, vector vec1, vector vec2);
+bool normalize_vector(vector *res, vector vec);
+bool create_matrix(matrix *res, int i, int j);
+bool create_simple_matrix(matrix *res, int i, int j, float s);
+void copy_matrix_data(matrix mat, const float *data);
+bool vector_from_matrix(vector *res, matrix mat, int i);
+bool matrix_scalar_product(matrix *res, matrix mat, float s);
+bool matrix_vector_product(vector *res, matrix mat, vector vec);
+bool matrix_matrix_product(matrix *res, matrix mat1, matrix mat2);
+bool transpose(matrix *res, matrix mat);
+float determinant(matrix mat);
+bool rotate(matrix *res, matrix mat, float a, vector vec);
+bool matrix_from_axis_angle(matrix *res, float a, vector vec);
+void print_vector(vector vec);
+void print_matrix(matrix mat);
 
 #endif

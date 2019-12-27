@@ -506,11 +506,11 @@ handle_events(void)
 void
 render(void)
 {
-	matrix *trans;
-	matrix *rot1;
-	matrix *rot2;
-	vector *axis1;
-	vector *axis2;
+	matrix trans;
+	matrix rot1;
+	matrix rot2;
+	vector axis1;
+	vector axis2;
 	GLint trans_uni;
 	int diff;
 
@@ -519,46 +519,17 @@ render(void)
 	diff = (int)(1000.0 * (curr_time.time - start_time.time)
 		+ (curr_time.millitm - start_time.millitm));
 
-	//const float rrot1[] = {
-	//	(float)cos((double)diff / 500.0), -(float)sin((double)diff / 500.0), 0.0f, 0.0f,
-	//	(float)sin((double)diff / 500.0),  (float)cos((double)diff / 500.0), 0.0f, 0.0f,
-	//	0.0f, 0.0f, 1.0f, 0.0f,
-	//	0.0f, 0.0f, 0.0f, 1.0f,
-	//};
-
-	//const float rrot2[] = {
-	//	1.0f, 0.0f, 0.0f, 0.0f,
-	//	0.0f, (float)cos(0.25 * M_PI), -(float)sin(0.25 * M_PI), 0.0f,
-	//	0.0f, (float)sin(0.25 * M_PI), (float)cos(0.25 * M_PI), 0.0f,
-	//	0.0f, 0.0f, 0.0f, 1.0f,
-	//};
-
-	//const float rrot1[] = {
-	//	(float)cos((double)diff / 1000.0), -(float)sin((double)diff / 1000.0), 0.0f, 0.0f,
-	//	(float)sin((double)diff / 1000.0),  (float)cos((double)diff / 1000.0), 0.0f, 0.0f,
-	//	0.0f,            0.0f,           1.0f, 0.0f,
-	//	0.0f,            0.0f,           0.0f, 1.0f,
-	//};
-
-	//const float rrot2[] = {
-	//	(float)cos((double)diff / 1000.0 * 0.6), 0.0f, (float)sin((double)diff / 1000.0 * 0.6), 0.0f,
-	//	0.0f, 1.0f, 0.0f, 0.0f,
-	//	-(float)sin((double)diff / 1000.0 * 0.6), 0.0f, (float)cos((double)diff / 1000.0 * 0.6), 0.0f,
-	//	0.0f, 0.0f, 0.0f, 1.0f,
-	//};
-
-
-	axis1 = create_vector(3);
-	if (!axis1)
-		die("error creating vector\n");
-	axis1->val[0] = 1.0f;
-	axis1->val[1] = 0.0f;
-	axis1->val[2] = 1.0f;
-	axis1 = normalize_vector(axis1);
-	rot1 = create_simple_matrix(4, 4, 1.0f);
-	if (!rot1)
+	if (!create_vector(&axis1, 3))
+		die("error creating vector axis1\n");
+	axis1.val[0] = 1.0f;
+	axis1.val[1] = 0.0f;
+	axis1.val[2] = 1.0f;
+	if (!normalize_vector(&axis1, axis1))
+		die("error normalizing vector axis1\n");
+	if (!create_simple_matrix(&rot1, 4, 4, 1.0f))
 		die("error creating matrix\n");
-	rot1 = rotate(rot1, diff / 500.0f, axis1);
+	if (!rotate(&rot1, rot1, diff / 500.0f, axis1))
+		die("error rotating matrix rot1\n");
 	//axis2 = create_vector(3);
 	//if (!axis2)
 	//	die("error creating vector\n");
@@ -570,9 +541,8 @@ render(void)
 	//	die("error creating matrix\n");
 	//rot2 = rotate(rot2, diff / 500.0f, axis2);
 	//trans = matrix_matrix_product(rot2, rot1);
+	//die("matrix multiplication failed");
 	trans = rot1;
-	if (!trans)
-		die("matrix multiplication failed");
 
 	//print_matrix(trans);
 	//printf("%f\n", diff / 500.0f);
@@ -588,7 +558,7 @@ render(void)
 	//printf("\n");
 
 	trans_uni = glGetUniformLocation(shader_program, "trans");
-	glUniformMatrix4fv(trans_uni, 1, GL_FALSE, trans->val);
+	glUniformMatrix4fv(trans_uni, 1, GL_FALSE, trans.val);
 
 	glClearColor(0.0, 0.7, 0.7, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT);
