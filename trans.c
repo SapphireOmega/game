@@ -21,7 +21,7 @@ create_vector(vector *vec, unsigned int i)
 }
 
 void
-copy_vector_data(vector vec, const float *data)
+vector_copy_data(vector vec, const float *data)
 {
 	unsigned int i;
 
@@ -112,12 +112,22 @@ create_simple_matrix(matrix *res, unsigned int i, unsigned int j, float s)
 }
 
 void
-copy_matrix_data(matrix mat, const float *data)
+matrix_copy_data(matrix mat, const float *data)
 {
 	unsigned int i;
 
 	for (i = 0; i < mat.i * mat.j; i++)
 		mat.val[i] = data[i];
+}
+
+bool
+copy_matrix(matrix *res, matrix mat)
+{
+	if (!create_matrix(res, mat.i, mat.j))
+		return false;
+	matrix_copy_data(*res, mat.val);
+
+	return true;
 }
 
 bool
@@ -282,6 +292,48 @@ determinant(float *res, matrix mat)
 }
 
 bool
+matrix_of_minors(matrix *res, matrix mat)
+{
+	int i;
+	matrix tmp;
+
+	if (!create_matrix(res, mat.i, mat.j))
+		return false;
+
+	for (i = 0; i < mat.i * mat.j; i++) {
+		if (!matrix_remove_row(&tmp, mat, i / mat.j))
+			return false;
+		if (!matrix_remove_column(&tmp, tmp, i % mat.j))
+			return false;
+		if (!determinant(&res->val[i], tmp))
+			return false;
+	}
+
+	return true;
+}
+
+bool
+inverse_matrix(matrix *res, matrix mat)
+{
+	matrix minors, cofactors, adjugate;
+	float det = 0.0f;
+	int i;
+
+	if (!matrix_of_minors(&minors, mat))
+		return false;
+	if (!copy_matrix(&cofactors, minors))
+		return false;
+	for (i = 1; i < cofactors.i * cofactors.j; i += 2)
+		cofactors.val[i] *= -1;
+	if (!transpose(&adjugate, cofactors))
+		return false;
+	for (i = 0; i < cofactors.j; i++)
+		det += cofactors.val[i] * mat.val[i];
+
+	return matrix_scalar_product(res, adjugate, 1.0f / det);
+}
+
+bool
 rotate(matrix *res, matrix mat, float a, vector vec)
 {
 	matrix rot;
@@ -322,7 +374,7 @@ matrix_from_axis_angle(matrix *res, float a, vector vec)
 
 	if (!create_matrix(res, 4, 4))
 		return false;
-	copy_matrix_data(*res, rres);
+	matrix_copy_data(*res, rres);
 
 	return true;
 }
