@@ -474,6 +474,23 @@ setup(void)
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
 	             test_image.width, test_image.height,
 		     0, GL_RGBA, GL_FLOAT, test_image.data);
+
+	float rtest[] = {
+		3.0f, 6.0f, 4.0f, 6.0f,
+		8.0f, 5.0f, 2.0f, 7.0f,
+		1.0f, 9.0f, 10.0f, 2.0f,
+		3.0f, 4.0f, 1.0f, 2.0f,
+	};
+
+	matrix test;
+	if (!create_matrix(&test, 4, 4))
+		die("test failure\n");
+	copy_matrix_data(test, rtest);
+	print_matrix(test);
+	float res;
+	if (!determinant(&res, test))
+		die("test failure\n");
+	printf("%f\n", res);
 }
 
 void

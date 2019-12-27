@@ -6,9 +6,9 @@
 #include <math.h>
 
 bool
-create_vector(vector *vec, int i)
+create_vector(vector *vec, unsigned int i)
 {
-	int x;
+	unsigned int x;
 
 	vec->i = i;
 	vec->val = (float *)malloc(sizeof(float) * i);
@@ -23,7 +23,7 @@ create_vector(vector *vec, int i)
 void
 copy_vector_data(vector vec, const float *data)
 {
-	int i;
+	unsigned int i;
 
 	for (i = 0; i < vec.i; i++)
 		vec.val[i] = data[i];
@@ -32,7 +32,7 @@ copy_vector_data(vector vec, const float *data)
 bool
 vector_scalar_product(vector *res, vector vec, float s)
 {
-	int i;
+	unsigned int i;
 
 	if (!create_vector(res, vec.i))
 		return false;
@@ -45,7 +45,7 @@ vector_scalar_product(vector *res, vector vec, float s)
 bool
 vector_vector_product(float *res, vector vec1, vector vec2)
 {
-	int i;
+	unsigned int i;
 
 	if (vec1.i != vec2.i)
 		return false;
@@ -58,7 +58,7 @@ vector_vector_product(float *res, vector vec1, vector vec2)
 bool
 normalize_vector(vector *res, vector vec)
 {
-	int i;
+	unsigned int i;
 	float sum = 0.0f, len; /* sum is the sum of squares */
 
 	if (!create_vector(res, vec.i))
@@ -74,9 +74,9 @@ normalize_vector(vector *res, vector vec)
 }
 
 bool
-create_matrix(matrix *res, int i, int j)
+create_matrix(matrix *res, unsigned int i, unsigned int j)
 {
-	int x;
+	unsigned int x;
 
 	res->i = i;
 	res->j = j;
@@ -90,9 +90,9 @@ create_matrix(matrix *res, int i, int j)
 }
 
 bool
-create_simple_matrix(matrix *res, int i, int j, float s)
+create_simple_matrix(matrix *res, unsigned int i, unsigned int j, float s)
 {
-	int a, x;
+	unsigned int a, x;
 
 	if (!create_matrix(res, i, j))
 		return false;
@@ -114,16 +114,16 @@ create_simple_matrix(matrix *res, int i, int j, float s)
 void
 copy_matrix_data(matrix mat, const float *data)
 {
-	int i;
+	unsigned int i;
 
 	for (i = 0; i < mat.i * mat.j; i++)
 		mat.val[i] = data[i];
 }
 
 bool
-vector_from_matrix(vector *res, matrix mat, int i)
+vector_from_matrix(vector *res, matrix mat, unsigned int i)
 {
-	int j;
+	unsigned int j;
 
 	if (i < 0 || i >= mat.i)
 		return false;
@@ -136,9 +136,43 @@ vector_from_matrix(vector *res, matrix mat, int i)
 }
 
 bool
+matrix_remove_row(matrix *res, matrix mat, unsigned int i)
+{
+	unsigned int x, y = 0;
+
+	if (i >= mat.i || !create_matrix(res, mat.i - 1, mat.j))
+		return false;
+	for (x = 0; x < mat.i * mat.j; x++) {
+		if (x / mat.j == i)
+			continue;
+		res->val[y] = mat.val[x];
+		y++;
+	}
+
+	return true;
+}
+
+bool
+matrix_remove_column(matrix *res, matrix mat, unsigned int j)
+{
+	unsigned int x, y = 0;
+
+	if (j >= mat.j || !create_matrix(res, mat.i, mat.j -1))
+		return false;
+	for (x = 0; x < mat.i * mat.j; x++) {
+		if (x % mat.j == j)
+			continue;
+		res->val[y] = mat.val[x];
+		y++;
+	}
+
+	return true;
+}
+
+bool
 matrix_scalar_product(matrix *res, matrix mat, float s)
 {
-	int i;
+	unsigned int i;
 
 	if (!create_matrix(res, mat.i, mat.j))
 		return false;
@@ -152,7 +186,7 @@ bool
 matrix_vector_product(vector *res, matrix mat, vector vec)
 {
 	vector tmp;
-	int i;
+	unsigned int i;
 
 	if (vec.i != mat.j)
 		return false;
@@ -172,7 +206,7 @@ bool
 matrix_matrix_product(matrix *res, matrix mat1, matrix mat2)
 {
 	vector tmp1, tmp2;
-	int i, j;
+	unsigned int i, j;
 
 	if (mat1.j != mat2.i)
 		return false;
@@ -193,13 +227,56 @@ matrix_matrix_product(matrix *res, matrix mat1, matrix mat2)
 bool
 transpose(matrix *res, matrix mat)
 {
-	int i, j;
+	unsigned int i, j;
 
 	if (!create_matrix(res, mat.j, mat.i))
 		return false;
 	for (i = 0; i < res->i; i++)
 		for (j = 0; j < res->j; j++)
 			res->val[i * res->j + j] = mat.val[j * mat.j + i];
+
+	return true;
+}
+
+static float
+det2(matrix mat)
+{
+	return mat.val[0] * mat.val[3] - mat.val[1] * mat.val[2];
+}
+
+static bool
+detn(float *res, matrix mat)
+{
+	unsigned int j;
+	matrix tmp1, tmp2;
+	float tmp_det;
+
+	if (!matrix_remove_row(&tmp1, mat, 0))
+		return false;
+	*res = 0.0f;
+	for (j = 0; j < mat.j; j++) {
+		if (!matrix_remove_column(&tmp2, tmp1, j))
+			return false;
+		if (!determinant(&tmp_det, tmp2))
+			return false;
+		if (j % 2 == 1)
+			*res += mat.val[j] * tmp_det;
+		else
+			*res -= mat.val[j] * tmp_det;
+	}
+
+	return true;
+}
+
+bool
+determinant(float *res, matrix mat)
+{
+	if (mat.i != mat.j || mat.i < 2)
+		return false;
+	else if (mat.i == 2 && mat.j == 2)
+		*res = det2(mat);
+	else
+		return detn(res, mat);
 
 	return true;
 }
@@ -253,7 +330,7 @@ matrix_from_axis_angle(matrix *res, float a, vector vec)
 void
 print_vector(vector vec)
 {
-	int i;
+	unsigned int i;
 
 	for (i = 0; i < vec.i; i++)
 		printf("%f\n", vec.val[i]);
@@ -262,8 +339,8 @@ print_vector(vector vec)
 void
 print_matrix(matrix mat)
 {
-	int i;
-	int j;
+	unsigned int i;
+	unsigned int j;
 
 	for (i = 0; i < mat.i; i++) {
 		for (j = 0; j < mat.j; j++)
