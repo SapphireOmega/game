@@ -207,6 +207,22 @@ matrix_matrix_product(const matrix *mat1, const matrix *mat2)
 }
 
 matrix *
+transpose(const matrix *mat)
+{
+	matrix *res;
+	int i, j;
+
+	res = create_matrix(mat->j, mat->i);
+	if (!res)
+		return NULL;
+	for (i = 0; i < res->i; i++)
+		for (j = 0; j < res->j; j++)
+			res->val[i * res->j + j] = mat->val[j * mat->j + i];
+
+	return res;
+}
+
+matrix *
 rotate(const matrix *mat, float a, const vector *vec)
 {
 	// matrix *res;
