@@ -353,14 +353,6 @@ parse_shader(const char *file, char **vs_dst, char **fs_dst)
 	}
 
 	fclose(fd);
-
-	FILE* vert = fopen("vertex", "w+");
-	fputs(*vs_dst, vert);
-	fclose(vert);
-
-	FILE* frag = fopen("fragment", "w+");
-	fputs(*fs_dst, frag);
-	fclose(frag);
 }
 
 GLuint
@@ -530,20 +522,20 @@ render(void)
 	if (!create_vector(&axis1, 3))
 		die("error creating vector axis1\n");
 	axis1.val[0] = 1.0f;
-	axis1.val[1] = 1.0f;
+	axis1.val[1] = 0.0f;
 	axis1.val[2] = 0.0f;
 	if (!normalize_vector(&axis1, axis1))
 		die("error normalizing vector axis1\n");
 	if (!create_simple_matrix(&rot1, 4, 4, 1.0f))
 		die("error creating matrix\n");
-	if (!rotate(&rot1, rot1, diff / 500.0f, axis1))
+	if (!rotate(&rot1, rot1, 0.785f, axis1))
 		die("error rotating matrix rot1\n");
 	model = rot1;
 
 	const float rcam[] = {
 		1.0f, 0.0f, 0.0f, 0.0f,
 		0.0f, 1.0f, 0.0f, 0.0f,
-		0.0f, 0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, -1.0f,
 		0.0f, 0.0f, 0.0f, 1.0f
 	};
 
@@ -553,19 +545,15 @@ render(void)
 
 	const float rcam_axis[] = { 1.0f, 0.0f, 0.0f };
 	if (!create_vector(&cam_axis, 3))
-		die("error creating vector ");
-	if (!create_simple_matrix(&cam_rot, 4, 4, 1.0f))
-		die("error creating matrix cam_rot\n");
-	if (!rotate(&cam_rot, cam_rot, 0.0f, cam_axis))
+		die("error creating vector cam_axis");
+	vector_copy_data(cam_axis, rcam_axis);
+	if (!normalize_vector(&cam_axis, cam_axis))
+		die("error normalizing vector\n");
+	if (!rotate(&cam, cam, 0.0f, cam_axis))
 		die("error rotating matrix cam_rot\n");
-	if (!matrix_matrix_product(&cam, cam, cam_rot))
-		die("error multiplying matrices cam and cam_rot\n");
 
 	if (!inverse_matrix(&view, cam))
 		die("error getting view from cam\n");
-
-	// if (!matrix_matrix_product(&model, cam, rot1))
-	// 	die("error multiplying matricies");
 
 	model_uni = glGetUniformLocation(shader_program, "model");
 	glUniformMatrix4fv(model_uni, 1, GL_FALSE, model.val);
@@ -580,6 +568,8 @@ render(void)
 	               GL_UNSIGNED_INT, 0);
 
 	glXSwapBuffers(display, window);
+
+	printf("%s\n", glGetString(GL_VERSION));
 }
 
 void

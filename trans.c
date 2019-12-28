@@ -344,7 +344,7 @@ rotate(matrix *res, matrix mat, float a, vector vec)
 
 	if (!matrix_from_axis_angle(&rot, a, vec))
 		return false;
-	if (!matrix_matrix_product(res, mat, rot))
+	if (!matrix_matrix_product(res, rot, mat))
 		return false;
 
 	return true;
