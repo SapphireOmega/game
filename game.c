@@ -295,7 +295,7 @@ parse_shader(const char *file, char **vs_dst, char **fs_dst)
 	char *line, *arg;
 	size_t n = 0;
 	enum shader_type t = NONE;
-	int linenum = 0;
+	int linenum;
 
 	if (!(fd = fopen(file, "r"))) {
 		fprintf(stderr, "error opening file\n");
@@ -307,7 +307,7 @@ parse_shader(const char *file, char **vs_dst, char **fs_dst)
 	fseek(fd, 0, SEEK_SET);
 	*vs_dst = (char *)malloc(sizeof(char) * len);
 	*fs_dst = (char *)malloc(sizeof(char) * len);
-	if (!*vs_dst) {
+	if (!vs_dst) {
 		fprintf(stderr, "error allocating vertex shader buffer\n");
 		exit(EXIT_FAILURE);
 	}
@@ -317,8 +317,10 @@ parse_shader(const char *file, char **vs_dst, char **fs_dst)
 		exit(EXIT_FAILURE);
 	}
 
-	for (;;) {
-		linenum++;
+	*vs_dst[0] = '\0';
+	*fs_dst[0] = '\0';
+
+	for (linenum = 0;; linenum++) {
 		getline(&line, &n, fd); /* automatically allocates line */
 		if (ferror(fd)) {
 			fprintf(stderr, "error reading from %s: %s\n",
@@ -351,6 +353,14 @@ parse_shader(const char *file, char **vs_dst, char **fs_dst)
 	}
 
 	fclose(fd);
+
+	FILE* vert = fopen("vertex", "w+");
+	fputs(*vs_dst, vert);
+	fclose(vert);
+
+	FILE* frag = fopen("fragment", "w+");
+	fputs(*fs_dst, frag);
+	fclose(frag);
 }
 
 GLuint
@@ -506,12 +516,10 @@ handle_events(void)
 void
 render(void)
 {
-	matrix trans;
-	matrix rot1;
-	matrix rot2;
-	vector axis1;
-	vector axis2;
-	GLint trans_uni;
+	matrix model, cam, view;
+	matrix rot1, cam_rot;
+	vector axis1, cam_axis;
+	GLint model_uni, view_uni;
 	int diff;
 
 	ftime(&curr_time);
@@ -522,43 +530,48 @@ render(void)
 	if (!create_vector(&axis1, 3))
 		die("error creating vector axis1\n");
 	axis1.val[0] = 1.0f;
-	axis1.val[1] = 0.0f;
-	axis1.val[2] = 1.0f;
+	axis1.val[1] = 1.0f;
+	axis1.val[2] = 0.0f;
 	if (!normalize_vector(&axis1, axis1))
 		die("error normalizing vector axis1\n");
 	if (!create_simple_matrix(&rot1, 4, 4, 1.0f))
 		die("error creating matrix\n");
 	if (!rotate(&rot1, rot1, diff / 500.0f, axis1))
 		die("error rotating matrix rot1\n");
-	//axis2 = create_vector(3);
-	//if (!axis2)
-	//	die("error creating vector\n");
-	//axis2->val[0] = 1.0f;
-	//axis2->val[1] = 1.0f;
-	//axis2->val[2] = 0.5f;
-	//rot2 = create_simple_matrix(4, 4, 1.0f);
-	//if (!rot2)
-	//	die("error creating matrix\n");
-	//rot2 = rotate(rot2, diff / 500.0f, axis2);
-	//trans = matrix_matrix_product(rot2, rot1);
-	//die("matrix multiplication failed");
-	trans = rot1;
+	model = rot1;
 
-	//print_matrix(trans);
-	//printf("%f\n", diff / 500.0f);
-	//printf("\n");
-	//
-	//vector *test = create_vector(4);
-	//test->val[0] = -0.5f;
-	//test->val[1] = 0.5f;
-	//test->val[2] = 0.0f;
-	//test->val[3] = 1.0f;
-	//printf("%f\n", diff / 500.0f);
-	//print_vector(matrix_vector_product(trans, test));
-	//printf("\n");
+	const float rcam[] = {
+		1.0f, 0.0f, 0.0f, 0.0f,
+		0.0f, 1.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 0.0f, 1.0f
+	};
 
-	trans_uni = glGetUniformLocation(shader_program, "trans");
-	glUniformMatrix4fv(trans_uni, 1, GL_FALSE, trans.val);
+	if (!create_matrix(&cam, 4, 4))
+		die("error creating matrix cam_rot\n");
+	matrix_copy_data(cam, rcam);
+
+	const float rcam_axis[] = { 1.0f, 0.0f, 0.0f };
+	if (!create_vector(&cam_axis, 3))
+		die("error creating vector ");
+	if (!create_simple_matrix(&cam_rot, 4, 4, 1.0f))
+		die("error creating matrix cam_rot\n");
+	if (!rotate(&cam_rot, cam_rot, 0.0f, cam_axis))
+		die("error rotating matrix cam_rot\n");
+	if (!matrix_matrix_product(&cam, cam, cam_rot))
+		die("error multiplying matrices cam and cam_rot\n");
+
+	if (!inverse_matrix(&view, cam))
+		die("error getting view from cam\n");
+
+	// if (!matrix_matrix_product(&model, cam, rot1))
+	// 	die("error multiplying matricies");
+
+	model_uni = glGetUniformLocation(shader_program, "model");
+	glUniformMatrix4fv(model_uni, 1, GL_FALSE, model.val);
+
+	view_uni = glGetUniformLocation(shader_program, "view");
+	glUniformMatrix4fv(view_uni, 1, GL_FALSE, view.val);
 
 	glClearColor(0.0, 0.7, 0.7, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT);

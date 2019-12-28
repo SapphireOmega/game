@@ -269,7 +269,7 @@ detn(float *res, matrix mat)
 			return false;
 		if (!determinant(&tmp_det, tmp2))
 			return false;
-		if (j % 2 == 1)
+		if (j % 2 == 0)
 			*res += mat.val[j] * tmp_det;
 		else
 			*res -= mat.val[j] * tmp_det;
@@ -323,8 +323,12 @@ inverse_matrix(matrix *res, matrix mat)
 		return false;
 	if (!copy_matrix(&cofactors, minors))
 		return false;
-	for (i = 1; i < cofactors.i * cofactors.j; i += 2)
-		cofactors.val[i] *= -1;
+	//for (i = 1; i < cofactors.i * cofactors.j; i += 2)
+	//	cofactors.val[i] *= -1;
+	for (i = 0; i < cofactors.i * cofactors.j; i++) {
+		if (i % 2 == (i / cofactors.j + 1) % 2)
+			cofactors.val[i] *= -1;
+	}
 	if (!transpose(&adjugate, cofactors))
 		return false;
 	for (i = 0; i < cofactors.j; i++)
