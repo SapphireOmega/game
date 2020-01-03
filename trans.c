@@ -216,6 +216,7 @@ bool
 matrix_matrix_product(matrix *res, matrix mat1, matrix mat2)
 {
 	vector tmp1, tmp2;
+	matrix test;
 	unsigned int i, j;
 
 	if (mat1.j != mat2.i)
@@ -225,7 +226,9 @@ matrix_matrix_product(matrix *res, matrix mat1, matrix mat2)
 	for (i = 0; i < res->i; i++) {
 		if (!vector_from_matrix(&tmp1, mat1, i))
 			return false;
-		if (!matrix_vector_product(&tmp2, mat2, tmp1))
+		if (!transpose(&test, mat2)) /* TODO: vector_matrix_product */
+			return false;
+		if (!matrix_vector_product(&tmp2, test, tmp1))
 			return false;
 		for (j = 0; j < tmp2.i; j++)
 			res->val[i * res->j + j] = tmp2.val[j];
@@ -344,7 +347,7 @@ rotate(matrix *res, matrix mat, float a, vector vec)
 
 	if (!matrix_from_axis_angle(&rot, a, vec))
 		return false;
-	if (!matrix_matrix_product(res, rot, mat))
+	if (!matrix_matrix_product(res, mat, rot))
 		return false;
 
 	return true;

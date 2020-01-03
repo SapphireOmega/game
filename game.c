@@ -16,6 +16,7 @@
 #include "util.h"
 #include "imgload.h"
 #include "trans.h"
+#include "proj.h"
 
 /* macros */
 #define GLEW_STATIC
@@ -508,11 +509,14 @@ handle_events(void)
 void
 render(void)
 {
-	matrix model, cam, view;
+	matrix proj, model, cam, view;
 	matrix rot1, cam_rot;
 	vector axis1, cam_axis;
-	GLint model_uni, view_uni;
+	GLint proj_uni, model_uni, view_uni;
 	int diff;
+	unsigned int width, height;
+	float aspect;
+	unsigned int dummy;
 
 	ftime(&curr_time);
 
@@ -528,16 +532,28 @@ render(void)
 		die("error normalizing vector axis1\n");
 	if (!create_simple_matrix(&rot1, 4, 4, 1.0f))
 		die("error creating matrix\n");
-	if (!rotate(&rot1, rot1, 0.785f, axis1))
+	if (!rotate(&rot1, rot1, 0.0f, axis1))
 		die("error rotating matrix rot1\n");
 	model = rot1;
 
 	const float rcam[] = {
 		1.0f, 0.0f, 0.0f, 0.0f,
 		0.0f, 1.0f, 0.0f, 0.0f,
-		0.0f, 0.0f, 1.0f, -1.0f,
+		0.0f, 0.0f, 1.0f, 5.0f,
 		0.0f, 0.0f, 0.0f, 1.0f
 	};
+
+	//create_simple_matrix(&cam, 4, 4, 1.0f);
+	//const float rcam_axis[] = { 1.0f, 0.0f, 0.0f };
+	//create_vector(&cam_axis, 3);
+	//vector_copy_data(cam_axis, rcam_axis);
+	//normalize_vector(&cam_axis, cam_axis);
+	//rotate(&cam, cam, diff / 500.0f, cam_axis);
+	//matrix test;
+	//create_matrix(&test, 4, 4);
+	//matrix_copy_data(test, rcam);
+
+	//matrix_matrix_product(&cam, cam, test);
 
 	if (!create_matrix(&cam, 4, 4))
 		die("error creating matrix cam_rot\n");
@@ -549,17 +565,55 @@ render(void)
 	vector_copy_data(cam_axis, rcam_axis);
 	if (!normalize_vector(&cam_axis, cam_axis))
 		die("error normalizing vector\n");
-	if (!rotate(&cam, cam, 0.0f, cam_axis))
+	if (!rotate(&cam, cam, diff / 500.0f, cam_axis))
 		die("error rotating matrix cam_rot\n");
 
 	if (!inverse_matrix(&view, cam))
 		die("error getting view from cam\n");
 
+	//print_matrix(view);
+	//printf("\n");
+
+	/* TODO: check errors */
+	XGetGeometry(display, window, (Window *)&dummy, (int *)&dummy,
+	             (int *)&dummy, &width, &height, &dummy, &dummy);
+	aspect = (float)width / (float)height;
+
+	if (!perspective(&proj, 1.57f, aspect, 0.1f, 100.0f))
+		die("error getting perspective");
+	//create_simple_matrix(&proj, 4, 4, 1.0f);
+	//print_matrix(proj);
+	//printf("\n");
+
+	float rtmpvec[] = { -0.5f, -0.5f, 0.0f, 1.0f };
+	vector tmpvec;
+	create_vector(&tmpvec, 4);
+	vector_copy_data(tmpvec, rtmpvec);
+
+	matrix tmp;
+	matrix_matrix_product(&tmp, proj, view);
+	matrix_matrix_product(&tmp, tmp, model);
+	matrix_vector_product(&tmpvec, tmp, tmpvec);
+	print_vector(tmpvec);
+
+	//matrix_vector_product(&tmpvec, model, tmpvec);
+	//print_vector(tmpvec);
+	//printf("\n");
+	//matrix_vector_product(&tmpvec, view, tmpvec);
+	//print_vector(tmpvec);
+	//printf("\n");
+	//matrix_vector_product(&tmpvec, proj, tmpvec);
+	//print_vector(tmpvec);
+	//printf("-----------\n");
+
 	model_uni = glGetUniformLocation(shader_program, "model");
-	glUniformMatrix4fv(model_uni, 1, GL_FALSE, model.val);
+	glUniformMatrix4fv(model_uni, 1, GL_FALSE, tmp.val);
 
 	view_uni = glGetUniformLocation(shader_program, "view");
-	glUniformMatrix4fv(view_uni, 1, GL_FALSE, view.val);
+	glUniformMatrix4fv(view_uni, 1, GL_FALSE, model.val);
+
+	proj_uni = glGetUniformLocation(shader_program, "proj");
+	glUniformMatrix4fv(proj_uni, 1, GL_FALSE, model.val);
 
 	glClearColor(0.0, 0.7, 0.7, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -568,8 +622,6 @@ render(void)
 	               GL_UNSIGNED_INT, 0);
 
 	glXSwapBuffers(display, window);
-
-	printf("%s\n", glGetString(GL_VERSION));
 }
 
 void

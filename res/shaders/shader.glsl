@@ -12,12 +12,13 @@ out vec2 ftexcoord;
 
 uniform mat4 model;
 uniform mat4 view;
+uniform mat4 proj;
 
 void main()
 {
 	fcolor = vcolor;
 	ftexcoord = vtexcoord;
-	gl_Position = view * model * vec4(position, 0.0, 1.0);
+	gl_Position = model * vec4(position, 0.0, 1.0);
 }
 
 #shader fragment
