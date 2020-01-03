@@ -523,37 +523,24 @@ render(void)
 	diff = (int)(1000.0 * (curr_time.time - start_time.time)
 		+ (curr_time.millitm - start_time.millitm));
 
+	float raxis1[] = { 1.0f, 1.0f, 0.0f };
 	if (!create_vector(&axis1, 3))
 		die("error creating vector axis1\n");
-	axis1.val[0] = 1.0f;
-	axis1.val[1] = 0.0f;
-	axis1.val[2] = 0.0f;
+	vector_copy_data(axis1, raxis1);
 	if (!normalize_vector(&axis1, axis1))
 		die("error normalizing vector axis1\n");
 	if (!create_simple_matrix(&rot1, 4, 4, 1.0f))
 		die("error creating matrix\n");
-	if (!rotate(&rot1, rot1, 0.0f, axis1))
+	if (!rotate(&rot1, rot1, diff / 100.0f, axis1))
 		die("error rotating matrix rot1\n");
 	model = rot1;
 
 	const float rcam[] = {
 		1.0f, 0.0f, 0.0f, 0.0f,
 		0.0f, 1.0f, 0.0f, 0.0f,
-		0.0f, 0.0f, 1.0f, 5.0f,
+		0.0f, 0.0f, 1.0f, 1.0f,
 		0.0f, 0.0f, 0.0f, 1.0f
 	};
-
-	//create_simple_matrix(&cam, 4, 4, 1.0f);
-	//const float rcam_axis[] = { 1.0f, 0.0f, 0.0f };
-	//create_vector(&cam_axis, 3);
-	//vector_copy_data(cam_axis, rcam_axis);
-	//normalize_vector(&cam_axis, cam_axis);
-	//rotate(&cam, cam, diff / 500.0f, cam_axis);
-	//matrix test;
-	//create_matrix(&test, 4, 4);
-	//matrix_copy_data(test, rcam);
-
-	//matrix_matrix_product(&cam, cam, test);
 
 	if (!create_matrix(&cam, 4, 4))
 		die("error creating matrix cam_rot\n");
@@ -571,49 +558,29 @@ render(void)
 	if (!inverse_matrix(&view, cam))
 		die("error getting view from cam\n");
 
-	//print_matrix(view);
-	//printf("\n");
-
 	/* TODO: check errors */
 	XGetGeometry(display, window, (Window *)&dummy, (int *)&dummy,
 	             (int *)&dummy, &width, &height, &dummy, &dummy);
 	aspect = (float)width / (float)height;
-
 	if (!perspective(&proj, 1.57f, aspect, 0.1f, 100.0f))
 		die("error getting perspective");
-	//create_simple_matrix(&proj, 4, 4, 1.0f);
-	//print_matrix(proj);
-	//printf("\n");
 
-	float rtmpvec[] = { -0.5f, -0.5f, 0.0f, 1.0f };
-	vector tmpvec;
-	create_vector(&tmpvec, 4);
-	vector_copy_data(tmpvec, rtmpvec);
-
-	matrix tmp;
-	matrix_matrix_product(&tmp, proj, view);
-	matrix_matrix_product(&tmp, tmp, model);
-	matrix_vector_product(&tmpvec, tmp, tmpvec);
-	print_vector(tmpvec);
-
-	//matrix_vector_product(&tmpvec, model, tmpvec);
-	//print_vector(tmpvec);
-	//printf("\n");
-	//matrix_vector_product(&tmpvec, view, tmpvec);
-	//print_vector(tmpvec);
-	//printf("\n");
-	//matrix_vector_product(&tmpvec, proj, tmpvec);
-	//print_vector(tmpvec);
-	//printf("-----------\n");
+	/* OpenGl uses column-major order (I found out the hard way) */
+	if (!transpose(&model, model))
+		die("error transposing model matrix\n");
+	if (!transpose(&view, view))
+		die("error transposing view matrix\n");
+	if (!transpose(&proj, proj))
+		die("error transposing projection matrix\n");
 
 	model_uni = glGetUniformLocation(shader_program, "model");
-	glUniformMatrix4fv(model_uni, 1, GL_FALSE, tmp.val);
+	glUniformMatrix4fv(model_uni, 1, GL_FALSE, model.val);
 
 	view_uni = glGetUniformLocation(shader_program, "view");
-	glUniformMatrix4fv(view_uni, 1, GL_FALSE, model.val);
+	glUniformMatrix4fv(view_uni, 1, GL_FALSE, view.val);
 
 	proj_uni = glGetUniformLocation(shader_program, "proj");
-	glUniformMatrix4fv(proj_uni, 1, GL_FALSE, model.val);
+	glUniformMatrix4fv(proj_uni, 1, GL_FALSE, proj.val);
 
 	glClearColor(0.0, 0.7, 0.7, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT);

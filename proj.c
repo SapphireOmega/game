@@ -16,8 +16,8 @@ bool perspective(matrix *res, float fovx, float aspect, float n, float f)
 	r = t * aspect;
 	l = -r;
 
-	printf("aspect: %f, fovx: %f, n: %f, f: %f, l: %f, r: %f, t: %f, b: %f\n",
-		aspect, fovx, n, f, l, r, t, b);
+	//printf("aspect: %f, fovx: %f, n: %f, f: %f, l: %f, r: %f, t: %f, b: %f\n",
+	//	aspect, fovx, n, f, l, r, t, b);
 
 	float rres[] = {
 		2.0f * n / (r - l), 0.0f, (l + r) / (r - l), 0.0f,
