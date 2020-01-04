@@ -1,110 +1,6 @@
-#include <errno.h>
-#include <math.h>
-#include <stdarg.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-#include <unistd.h>
+#include "game.h"
 
-#include <GL/glew.h>
-#include <GL/glu.h>
-#include <GL/glx.h>
-#include <X11/Xlib.h>
-#include <X11/XKBlib.h>
-
-#include "util.h"
-#include "imgload.h"
-#include "trans.h"
-#include "proj.h"
-#include "window.h"
-
-/* macros */
-#define GLEW_STATIC
-#define GLX_CONTEXT_MAJOR_VERSION_ARB 0x2091
-#define GLX_CONTEXT_MINOR_VERSION_ARB 0x2092
-
-#define LENGTH(X) sizeof(X) / sizeof(X[0])
-
-/* types */
-typedef struct {
-	KeySym keysym;
-	bool pressed;
-	void (*func)(void);
-} Key;
-
-/* enums */
-enum shader_type { VERTEX, FRAGMENT, NONE };
-
-/* function declarations */
-static void parse_shader(const char *file, char **vs_dst, char **fs_dst);
-static GLuint compile_shader(GLenum type, const char *src);
-static GLuint create_shader_program(const char *vs_src, const char *fs_src);
-
-static void expose(XEvent *e);
-static void client_message(XEvent *e);
-static void key_event(XEvent *e, bool pressed);
-static void key_press(XEvent *e);
-static void key_release(XEvent *e);
-
-static void (*handler[LASTEvent])(XEvent *e) = {
-	[Expose] = expose,
-	[ClientMessage] = client_message,
-	[KeyPress] = key_press,
-	[KeyRelease] = key_release,
-};
-
-static void move_foreward(void);
-static void move_backward(void);
-static void move_left(void);
-static void move_right(void);
-static void rot_left(void);
-static void rot_right(void);
-
-static void setup(void);
-static void handle_events(void);
-static void render(void);
-static void cleanup(void);
-static void exit_game(void);
-
-/* globals */
-static double dt;
-static GLuint shader_program;
-static GLuint vao;
-static GLuint vbo;
-static GLuint ebo;
-static struct tga_file test_image;
-static GLuint tex;
-static struct camera cam = {
-	.x = 0.0f, .y = 0.0f, .z = 1.0f,
-	.angle_x = 0.0f, .angle_y = 0.0f, .angle_z = 0.0f,
-	.fovx = 1.570796f,
-	.proj = PERSP,
-	.n = 0.1f, .f = 100.0f
-};
-
-static const float vertices[] = {
-/*      pos           color             texcoords */
-	-0.5f,  0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
-	 0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-	 0.5f, -0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
-	-0.5f, -0.5f, 1.0f, 0.5f, 0.5f, 0.0f, 0.0f,
-};
-
-static const GLuint elements[] = {
-	0, 1, 2,
-	2, 3, 0,
-};
-
-static Key keys[] = {
-	{ XK_w, false, move_foreward },
-	{ XK_s, false, move_backward },
-	{ XK_a, false, move_left },
-	{ XK_d, false, move_right },
-	{ XK_q, false, rot_left },
-	{ XK_e, false, rot_right },
-};
+#include "engine_time.h"
 
 /* function definitions */
 void
@@ -263,41 +159,41 @@ key_release(XEvent *e)
 void
 move_foreward(void)
 {
-	cam.z -= 50.0f * cosf(cam.angle_y) * (float)dt;
-	cam.x -= 50.0f * cosf(1.57f - cam.angle_y) * (float)dt;
+	cam.z -= 50.0f * cosf(cam.angle_y) * (float)delta_time;
+	cam.x -= 50.0f * cosf(1.57f - cam.angle_y) * (float)delta_time;
 }
 
 void
 move_backward(void)
 {
-	cam.z += 50.0f * cosf(cam.angle_y) * (float)dt;
-	cam.x += 50.0f * cosf(1.57f - cam.angle_y) * (float)dt;
+	cam.z += 50.0f * cosf(cam.angle_y) * (float)delta_time;
+	cam.x += 50.0f * cosf(1.57f - cam.angle_y) * (float)delta_time;
 }
 
 void
 move_left(void)
 {
-	cam.z += 50.0f * cosf(1.57f - cam.angle_y) * (float)dt;
-	cam.x -= 50.0f * cosf(cam.angle_y) * (float)dt;
+	cam.z += 50.0f * cosf(1.57f - cam.angle_y) * (float)delta_time;
+	cam.x -= 50.0f * cosf(cam.angle_y) * (float)delta_time;
 }
 
 void
 move_right(void)
 {
-	cam.z -= 50.0f * cosf(1.57f - cam.angle_y) * (float)dt;
-	cam.x += 50.0f * cosf(cam.angle_y) * (float)dt;
+	cam.z -= 50.0f * cosf(1.57f - cam.angle_y) * (float)delta_time;
+	cam.x += 50.0f * cosf(cam.angle_y) * (float)delta_time;
 }
 
 void
 rot_left(void)
 {
-	cam.angle_y += 50.0f * (float)dt;
+	cam.angle_y += 50.0f * (float)delta_time;
 }
 
 void
 rot_right(void)
 {
-	cam.angle_y -= 50.0f * (float)dt;
+	cam.angle_y -= 50.0f * (float)delta_time;
 }
 
 void
@@ -456,27 +352,4 @@ exit_game(void)
 {
 	cleanup();
 	exit(EXIT_SUCCESS);
-}
-
-int
-main(int argc, char *argv[])
-{
-	struct timespec start, end;
-
-	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
-	setup();
-
-	for (;;) {
-		start = end;
-		clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
-		dt = (double)(end.tv_sec - start.tv_sec) +
-			(double)(end.tv_nsec - start.tv_nsec) / 1.0e9;
-
-		handle_events();
-		render();
-	}
-
-	cleanup();
-
-	return EXIT_SUCCESS;
 }
