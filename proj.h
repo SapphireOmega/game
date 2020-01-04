@@ -3,6 +3,26 @@
 
 #include "trans.h"
 
-bool perspective(matrix *res, float fovx, float aspect, float n, float f);
+/* enums */
+enum proj_type { PERSP, ORTHO };
+
+/* structs */
+struct camera {
+	float x, y, z;
+	float angle_x, angle_y, angle_z;
+	float fovx;
+	enum proj_type proj;
+	float n, f;
+};
+
+/* variables */
+struct camera *current_camera;
+
+static matrix viewm;
+static matrix projm;
+
+/* functions */
+bool view(matrix *res);
+bool perspective(matrix *res, float aspect);
 
 #endif

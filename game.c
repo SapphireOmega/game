@@ -5,13 +5,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
-#include <sys/timeb.h>
 
 #include <GL/glew.h>
 #include <GL/glu.h>
 #include <GL/glx.h>
 #include <X11/Xlib.h>
+#include <X11/XKBlib.h>
 
 #include "util.h"
 #include "imgload.h"
@@ -23,9 +24,17 @@
 #define GLX_CONTEXT_MAJOR_VERSION_ARB 0x2091
 #define GLX_CONTEXT_MINOR_VERSION_ARB 0x2092
 
-/* typedefs */
+#define LENGTH(X) sizeof(X) / sizeof(X[0])
+
+/* types */
 typedef GLXContext (*glXCreateContextAttribsARBProc)
 	(Display *, GLXFBConfig, GLXContext, Bool, const int *);
+
+typedef struct {
+	KeySym keysym;
+	bool pressed;
+	void (*func)(void);
+} Key;
 
 /* enums */
 enum shader_type { VERTEX, FRAGMENT, NONE };
@@ -39,17 +48,39 @@ static void create_window(XVisualInfo *vi);
 static int context_error_handler(Display *display, XErrorEvent *e);
 static bool extension_supported(const char *ext_list, const char *extension);
 static void create_context(GLXFBConfig fbc);
+
 static void parse_shader(const char *file, char **vs_dst, char **fs_dst);
 static GLuint compile_shader(GLenum type, const char *src);
 static GLuint create_shader_program(const char *vs_src, const char *fs_src);
+
+static void expose(XEvent *e);
+static void client_message(XEvent *e);
+static void key_event(XEvent *e, bool pressed);
+static void key_press(XEvent *e);
+static void key_release(XEvent *e);
+
+static void (*handler[LASTEvent])(XEvent *e) = {
+	[Expose] = expose,
+	[ClientMessage] = client_message,
+	[KeyPress] = key_press,
+	[KeyRelease] = key_release,
+};
+
+static void move_foreward(void);
+static void move_backward(void);
+static void move_left(void);
+static void move_right(void);
+static void rot_left(void);
+static void rot_right(void);
+
 static void setup(void);
 static void handle_events(void);
 static void render(void);
 static void cleanup(void);
 static void exit_game(void);
 
-/* variables */
-static struct timeb start_time, curr_time;
+/* globals */
+static double dt;
 static Display *display;
 static int screen_id;
 static Window root_window;
@@ -65,6 +96,13 @@ static GLuint vbo;
 static GLuint ebo;
 static struct tga_file test_image;
 static GLuint tex;
+static struct camera cam = {
+	.x = 0.0f, .y = 0.0f, .z = 1.0f,
+	.angle_x = 0.0f, .angle_y = 0.0f, .angle_z = 0.0f,
+	.fovx = 1.570796f,
+	.proj = PERSP,
+	.n = 0.1f, .f = 100.0f
+};
 
 static const float vertices[] = {
 /*      pos           color             texcoords */
@@ -79,6 +117,16 @@ static const GLuint elements[] = {
 	2, 3, 0,
 };
 
+static Key keys[] = {
+	{ XK_w, false, move_foreward },
+	{ XK_s, false, move_backward },
+	{ XK_a, false, move_left },
+	{ XK_d, false, move_right },
+	{ XK_q, false, rot_left },
+	{ XK_e, false, rot_right },
+};
+
+/* function definitions */
 void
 check_glx_version(void)
 {
@@ -179,7 +227,7 @@ create_window(XVisualInfo *vi)
 	colormap = XCreateColormap(display, root_window, vi->visual, AllocNone);
 
 	swa.colormap = colormap;
-	swa.event_mask = ExposureMask | KeyPressMask;
+	swa.event_mask = ExposureMask | KeyPressMask | KeyReleaseMask;
 	swa.border_pixel = BlackPixel(display, screen_id);
 	swa.background_pixel = WhitePixel(display, screen_id);
 
@@ -193,6 +241,7 @@ create_window(XVisualInfo *vi)
 	XStoreName(display, window, "OpenGl & Xlib test");
 	printf("mapping window\n");
 	XMapWindow(display, window);
+	XAutoRepeatOff(display);
 }
 
 int
@@ -403,14 +452,91 @@ create_shader_program(const char *vs_src, const char *fs_src)
 }
 
 void
+expose(XEvent *e)
+{
+	XGetWindowAttributes(display, window, &window_attribs);
+	glViewport(0, 0, window_attribs.width, window_attribs.height);
+}
+
+void
+client_message(XEvent *e)
+{
+	exit_game();
+}
+
+void
+key_event(XEvent *e, bool pressed)
+{
+	KeySym keysym;
+	XKeyEvent *ev;
+	int i;
+
+	ev = &e->xkey;
+	keysym = XkbKeycodeToKeysym(display, (KeyCode)ev->keycode, 0, 0);
+	for (i = 0; i < LENGTH(keys); i++)
+		if (keys[i].keysym == keysym)
+			keys[i].pressed = pressed;
+}
+
+void
+key_press(XEvent *e)
+{
+	key_event(e, true);
+}
+
+void
+key_release(XEvent *e)
+{
+	key_event(e, false);
+}
+
+void
+move_foreward(void)
+{
+	cam.z -= 50.0f * cosf(cam.angle_y) * (float)dt;
+	cam.x -= 50.0f * cosf(1.57f - cam.angle_y) * (float)dt;
+}
+
+void
+move_backward(void)
+{
+	cam.z += 50.0f * cosf(cam.angle_y) * (float)dt;
+	cam.x += 50.0f * cosf(1.57f - cam.angle_y) * (float)dt;
+}
+
+void
+move_left(void)
+{
+	cam.z += 50.0f * cosf(1.57f - cam.angle_y) * (float)dt;
+	cam.x -= 50.0f * cosf(cam.angle_y) * (float)dt;
+}
+
+void
+move_right(void)
+{
+	cam.z -= 50.0f * cosf(1.57f - cam.angle_y) * (float)dt;
+	cam.x += 50.0f * cosf(cam.angle_y) * (float)dt;
+}
+
+void
+rot_left(void)
+{
+	cam.angle_y += 50.0f * (float)dt;
+}
+
+void
+rot_right(void)
+{
+	cam.angle_y -= 50.0f * (float)dt;
+}
+
+void
 setup(void)
 {
 	GLXFBConfig fbc;
 	XVisualInfo *vi;
 	char *vs_src, *fs_src;
 	GLint pos_attrib, col_attrib, tex_attrib, status;
-
-	ftime(&start_time);
 
 	if (!(display = XOpenDisplay(NULL)))
 		die("cannot open display\n");
@@ -483,45 +609,31 @@ void
 handle_events(void)
 {
 	XEvent e;
+	int i;
 
 	for (;;) {
 		if (!XPending(display))
 			break;
 		XNextEvent(display, &e);
-		switch (e.type) {
-		case Expose:
-			XGetWindowAttributes(display, window, &window_attribs);
-			glViewport(0, 0, window_attribs.width,
-			           window_attribs.height);
-			render();
-			glXSwapBuffers(display, window);
-			break;
-		case ClientMessage:
-			exit_game();
-			break;
-		default:
-			printf("dropping unhandled XEvent.type = %d\n", e.type);
-			break;
-		}
+		if (handler[e.type])
+			handler[e.type](&e);
 	}
+
+	for (i = 0; i < LENGTH(keys); i++)
+		if (keys[i].func && keys[i].pressed)
+			keys[i].func();
 }
 
 void
 render(void)
 {
-	matrix proj, model, cam, view;
+	matrix proj, model, camm, viewm;
 	matrix rot1, cam_rot;
 	vector axis1, cam_axis;
 	GLint proj_uni, model_uni, view_uni;
-	int diff;
 	unsigned int width, height;
 	float aspect;
 	unsigned int dummy;
-
-	ftime(&curr_time);
-
-	diff = (int)(1000.0 * (curr_time.time - start_time.time)
-		+ (curr_time.millitm - start_time.millitm));
 
 	float raxis1[] = { 1.0f, 1.0f, 0.0f };
 	if (!create_vector(&axis1, 3))
@@ -531,44 +643,23 @@ render(void)
 		die("error normalizing vector axis1\n");
 	if (!create_simple_matrix(&rot1, 4, 4, 1.0f))
 		die("error creating matrix\n");
-	if (!rotate(&rot1, rot1, diff / 100.0f, axis1))
+	if (!rotate(&rot1, rot1, 0.0f, axis1))
 		die("error rotating matrix rot1\n");
 	model = rot1;
 
-	const float rcam[] = {
-		1.0f, 0.0f, 0.0f, 0.0f,
-		0.0f, 1.0f, 0.0f, 0.0f,
-		0.0f, 0.0f, 1.0f, 1.0f,
-		0.0f, 0.0f, 0.0f, 1.0f
-	};
+	current_camera = &cam;
 
-	if (!create_matrix(&cam, 4, 4))
-		die("error creating matrix cam_rot\n");
-	matrix_copy_data(cam, rcam);
+	if (!view(&viewm))
+		die("error getting view matrix");
 
-	const float rcam_axis[] = { 1.0f, 0.0f, 0.0f };
-	if (!create_vector(&cam_axis, 3))
-		die("error creating vector cam_axis");
-	vector_copy_data(cam_axis, rcam_axis);
-	if (!normalize_vector(&cam_axis, cam_axis))
-		die("error normalizing vector\n");
-	if (!rotate(&cam, cam, diff / 500.0f, cam_axis))
-		die("error rotating matrix cam_rot\n");
-
-	if (!inverse_matrix(&view, cam))
-		die("error getting view from cam\n");
-
-	/* TODO: check errors */
-	XGetGeometry(display, window, (Window *)&dummy, (int *)&dummy,
-	             (int *)&dummy, &width, &height, &dummy, &dummy);
-	aspect = (float)width / (float)height;
-	if (!perspective(&proj, 1.57f, aspect, 0.1f, 100.0f))
+	aspect = (float)window_attribs.width / (float)window_attribs.height;
+	if (!perspective(&proj, aspect))
 		die("error getting perspective");
 
 	/* OpenGl uses column-major order (I found out the hard way) */
 	if (!transpose(&model, model))
 		die("error transposing model matrix\n");
-	if (!transpose(&view, view))
+	if (!transpose(&viewm, viewm))
 		die("error transposing view matrix\n");
 	if (!transpose(&proj, proj))
 		die("error transposing projection matrix\n");
@@ -577,7 +668,7 @@ render(void)
 	glUniformMatrix4fv(model_uni, 1, GL_FALSE, model.val);
 
 	view_uni = glGetUniformLocation(shader_program, "view");
-	glUniformMatrix4fv(view_uni, 1, GL_FALSE, view.val);
+	glUniformMatrix4fv(view_uni, 1, GL_FALSE, viewm.val);
 
 	proj_uni = glGetUniformLocation(shader_program, "proj");
 	glUniformMatrix4fv(proj_uni, 1, GL_FALSE, proj.val);
@@ -598,6 +689,8 @@ cleanup(void)
 	glDeleteBuffers(1, &vbo);
 	glDeleteVertexArrays(1, &vao);
 
+	XAutoRepeatOn(display);
+
 	glXMakeCurrent(display, None, NULL);
 	glXDestroyContext(display, render_context);
 	XFreeColormap(display, colormap);
@@ -615,9 +708,17 @@ exit_game(void)
 int
 main(int argc, char *argv[])
 {
+	struct timespec start, end;
+
+	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
 	setup();
 
 	for (;;) {
+		start = end;
+		clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
+		dt = (double)(end.tv_sec - start.tv_sec) +
+			(double)(end.tv_nsec - start.tv_nsec) / 1.0e9;
+
 		handle_events();
 		render();
 	}
