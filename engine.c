@@ -2,6 +2,7 @@
 
 #include "engine_time.h"
 #include "init.h"
+#include "event.h"
 
 int
 main(int argc, char *argv[])

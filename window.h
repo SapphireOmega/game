@@ -10,6 +10,9 @@
 /* macros */
 #define GLEW_STATIC
 
+#define GLX_CONTEXT_MAJOR_VERSION_ARB 0x2091
+#define GLX_CONTEXT_MINOR_VERSION_ARB 0x2092
+
 /* types */
 typedef GLXContext (*glXCreateContextAttribsARBProc)
 	(Display *, GLXFBConfig, GLXContext, Bool, const int *);

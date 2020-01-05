@@ -2,47 +2,9 @@
 
 #include "engine_time.h"
 #include "shader.h"
+#include "event.h"
 
 /* function definitions */
-void
-expose(XEvent *e)
-{
-	XGetWindowAttributes(display, window, &window_attribs);
-	glViewport(0, 0, window_attribs.width, window_attribs.height);
-}
-
-void
-client_message(XEvent *e)
-{
-	exit_game(EXIT_SUCCESS);
-}
-
-void
-key_event(XEvent *e, bool pressed)
-{
-	KeySym keysym;
-	XKeyEvent *ev;
-	int i;
-
-	ev = &e->xkey;
-	keysym = XkbKeycodeToKeysym(display, (KeyCode)ev->keycode, 0, 0);
-	for (i = 0; i < LENGTH(keys); i++)
-		if (keys[i].keysym == keysym)
-			keys[i].pressed = pressed;
-}
-
-void
-key_press(XEvent *e)
-{
-	key_event(e, true);
-}
-
-void
-key_release(XEvent *e)
-{
-	key_event(e, false);
-}
-
 void
 move_foreward(void)
 {
@@ -87,7 +49,7 @@ void
 setup(void)
 {
 	GLint pos_attrib, col_attrib, tex_attrib, status;
-	char *vs_src, *fs_src;
+	char *vs_src, *fs_src, *err;
 
 	engine_create_window(800, 600);
 	XAutoRepeatOff(display);
@@ -140,25 +102,9 @@ setup(void)
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
 	             test_image.width, test_image.height,
 		     0, GL_RGBA, GL_FLOAT, test_image.data);
-}
 
-void
-handle_events(void)
-{
-	XEvent e;
-	int i;
-
-	for (;;) {
-		if (!XPending(display))
-			break;
-		XNextEvent(display, &e);
-		if (handler[e.type])
-			handler[e.type](&e);
-	}
-
-	for (i = 0; i < LENGTH(keys); i++)
-		if (keys[i].func && keys[i].pressed)
-			keys[i].func();
+	if (!add_key(err, XK_w, move_foreward, move_foreward))
+		die("error adding key: %s", err);
 }
 
 void
