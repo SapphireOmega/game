@@ -1,17 +1,10 @@
 #ifndef GAME_H
 #define GAME_H
 
-#include <math.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <GL/glew.h>
 
-#include "util.h"
-#include "imgload.h"
-#include "trans.h"
-#include "proj.h"
-#include "window.h"
-#include "init.h"
+#include "engine/imgload.h"
+#include "engine/proj.h"
 
 /* function declarations */
 void move_foreward(void);

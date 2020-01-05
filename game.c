@@ -1,8 +1,19 @@
 #include "game.h"
 
-#include "engine_time.h"
-#include "shader.h"
-#include "event.h"
+#include <math.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "engine/engine_time.h"
+#include "engine/shader.h"
+#include "engine/event.h"
+#include "engine/imgload.h"
+#include "engine/init.h"
+#include "engine/proj.h"
+#include "engine/trans.h"
+#include "engine/util.h"
+#include "engine/window.h"
 
 /* function definitions */
 void
