@@ -234,6 +234,12 @@ engine_create_window(unsigned int w, unsigned int h)
 	create_window(vi, w, h);
 	XFree(vi);
 	create_context(fbc);
+
+	printf("initializing glew\n");
+	glewExperimental = GL_TRUE;
+	GLuint error = glewInit();
+	if (error != GLEW_OK)
+		die("error initializing glew: %s\n", glewGetErrorString(error));
 }
 
 void

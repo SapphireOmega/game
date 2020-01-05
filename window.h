@@ -3,8 +3,12 @@
 
 #include <stdbool.h>
 
+#include <GL/glew.h>
 #include <GL/glx.h>
 #include <X11/Xlib.h>
+
+/* macros */
+#define GLEW_STATIC
 
 /* types */
 typedef GLXContext (*glXCreateContextAttribsARBProc)

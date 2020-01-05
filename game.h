@@ -21,9 +21,9 @@
 #include "trans.h"
 #include "proj.h"
 #include "window.h"
+#include "init.h"
 
 /* macros */
-#define GLEW_STATIC
 #define GLX_CONTEXT_MAJOR_VERSION_ARB 0x2091
 #define GLX_CONTEXT_MINOR_VERSION_ARB 0x2092
 
@@ -36,14 +36,7 @@ typedef struct {
 	void (*func)(void);
 } Key;
 
-/* enums */
-enum shader_type { VERTEX, FRAGMENT, NONE };
-
 /* function declarations */
-static void parse_shader(const char *file, char **vs_dst, char **fs_dst);
-static GLuint compile_shader(GLenum type, const char *src);
-static GLuint create_shader_program(const char *vs_src, const char *fs_src);
-
 void expose(XEvent *e);
 void client_message(XEvent *e);
 void key_event(XEvent *e, bool pressed);
@@ -68,15 +61,14 @@ void setup(void);
 void handle_events(void);
 void render(void);
 void cleanup(void);
-void exit_game(void);
 
 /* globals */
-GLuint shader_program;
-GLuint vao;
-GLuint vbo;
-GLuint ebo;
-struct tga_file test_image;
-GLuint tex;
+static GLuint shader_program;
+static GLuint vao;
+static GLuint vbo;
+static GLuint ebo;
+static struct tga_file test_image;
+static GLuint tex;
 static struct camera cam = {
 	.x = 0.0f, .y = 0.0f, .z = 1.0f,
 	.angle_x = 0.0f, .angle_y = 0.0f, .angle_z = 0.0f,

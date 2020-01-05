@@ -1,11 +1,12 @@
 #include "game.h"
 
 #include "engine_time.h"
+#include "init.h"
 
 int
 main(int argc, char *argv[])
 {
-	init_time();
+	engine_setup();
 	setup();
 
 	for (;;) {
@@ -16,6 +17,7 @@ main(int argc, char *argv[])
 	}
 
 	cleanup();
+	engine_cleanup();
 
 	return EXIT_SUCCESS;
 }
