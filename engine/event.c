@@ -5,8 +5,8 @@
 #include <errno.h>
 #include <string.h>
 
+#include "engine.h"
 #include "window.h"
-#include "init.h"
 
 /* globals */
 static void (*handler[LASTEvent])(XEvent *e) = {

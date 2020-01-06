@@ -1,26 +1,73 @@
-#include "../game.h"
+#include "engine.h"
 
 #include <stdlib.h>
 
 #include "engine_time.h"
-#include "init.h"
 #include "event.h"
+#include "state.h"
+#include "util.h"
+#include "window.h"
 
-int
-main(int argc, char *argv[])
+void
+engine_setup(void)
+{
+	char *err;
+
+	init_time();
+	if (!init_keys(err))
+		die("error initializing keys: %s", err);
+}
+
+void
+engine_cleanup(void)
+{
+	clean_keys();
+	XAutoRepeatOn(display);
+	engine_destroy_window();
+}
+
+void
+engine_run()
 {
 	engine_setup();
-	setup();
+	if (current_state.setup)
+		current_state.setup();
 
-	for (;;) {
+	while (running) {
 		update_delta_time();
-
 		handle_events();
-		render();
+		if (current_state.render)
+			current_state.render();
 	}
 
-	cleanup();
-	engine_cleanup();
-
-	return EXIT_SUCCESS;
+	if (current_state.cleanup)
+		current_state.cleanup();
 }
+
+void
+exit_game(int status)
+{
+	if (current_state.cleanup)
+		current_state.cleanup();
+	engine_cleanup();
+	running = false;
+}
+
+//int
+//main(int argc, char *argv[])
+//{
+//	engine_init();
+//	setup();
+//
+//	for (;;) {
+//		update_delta_time();
+//
+//		handle_events();
+//		render();
+//	}
+//
+//	cleanup();
+//	engine_cleanup();
+//
+//	return EXIT_SUCCESS;
+//}

@@ -1,19 +1,61 @@
-#include "game.h"
-
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <GL/glew.h>
+
+#include "engine/engine.h"
 #include "engine/engine_time.h"
-#include "engine/shader.h"
 #include "engine/event.h"
-#include "engine/init.h"
+#include "engine/shader.h"
+#include "engine/state.h"
+#include "engine/imgload.h"
+#include "engine/proj.h"
 #include "engine/trans.h"
 #include "engine/util.h"
 #include "engine/window.h"
 
+/* function declarations */
+static void move_foreward(void);
+static void move_backward(void);
+static void move_left(void);
+static void move_right(void);
+static void rot_left(void);
+static void rot_right(void);
+
+static void setup(void);
+static void render(void);
+static void cleanup(void);
+
 /* globals */
+static GLuint shader_program;
+static GLuint vao;
+static GLuint vbo;
+static GLuint ebo;
+static struct tga_file test_image;
+static GLuint tex;
+static struct camera cam = {
+	.x = 0.0f, .y = 0.0f, .z = 1.0f,
+	.angle_x = 0.0f, .angle_y = 0.0f, .angle_z = 0.0f,
+	.fovx = 1.570796f,
+	.proj = PERSP,
+	.n = 0.1f, .f = 100.0f
+};
+
+static const float vertices[] = {
+/*      pos           color             texcoords */
+	-0.5f,  0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
+	 0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+	 0.5f, -0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
+	-0.5f, -0.5f, 1.0f, 0.5f, 0.5f, 0.0f, 0.0f,
+};
+
+static const GLuint elements[] = {
+	0, 1, 2,
+	2, 3, 0,
+};
+
 vector vel;
 
 /* function definitions */
@@ -239,4 +281,15 @@ cleanup(void)
 	glDeleteProgram(shader_program);
 	glDeleteBuffers(1, &vbo);
 	glDeleteVertexArrays(1, &vao);
+}
+
+int
+main(int argc, char *argv[])
+{
+	GameState game_state = { setup, NULL, render, cleanup };
+
+	engine_set_current_state(game_state);
+	engine_run();
+
+	return EXIT_SUCCESS;
 }
