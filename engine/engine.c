@@ -52,22 +52,3 @@ exit_game(int status)
 	engine_cleanup();
 	running = false;
 }
-
-//int
-//main(int argc, char *argv[])
-//{
-//	engine_init();
-//	setup();
-//
-//	for (;;) {
-//		update_delta_time();
-//
-//		handle_events();
-//		render();
-//	}
-//
-//	cleanup();
-//	engine_cleanup();
-//
-//	return EXIT_SUCCESS;
-//}

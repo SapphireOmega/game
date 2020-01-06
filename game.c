@@ -57,6 +57,7 @@ static const GLuint elements[] = {
 };
 
 vector vel;
+matrix rot1;
 
 /* function definitions */
 void
@@ -206,13 +207,15 @@ setup(void)
 		die("error creating velocity vector\n");
 
 	current_camera = &cam;
+
+	if (!create_simple_matrix(&rot1, 4, 4, 1.0f))
+		die("error creating matrix\n");
 }
 
 void
 render(void)
 {
 	matrix proj, model, camm, viewm;
-	matrix rot1, cam_rot;
 	vector axis1, cam_axis, tmp;
 	GLint proj_uni, model_uni, view_uni;
 	unsigned int width, height;
@@ -230,16 +233,14 @@ render(void)
 
 	vel.val[0] = vel.val[1] = vel.val[2] = 0.0f;
 
-	//float raxis1[] = { 1.0f, 1.0f, 0.0f };
-	//if (!create_vector(&axis1, 3))
-	//	die("error creating vector axis1\n");
-	//vector_copy_data(axis1, raxis1);
-	//if (!normalize_vector(&axis1, axis1))
-	//	die("error normalizing vector axis1\n");
-	if (!create_simple_matrix(&rot1, 4, 4, 1.0f))
-		die("error creating matrix\n");
-	//if (!rotate(&rot1, rot1, 0.0f, axis1))
-	//	die("error rotating matrix rot1\n");
+	float raxis1[] = { 0.0f, 0.0f, 1.0f };
+	if (!create_vector(&axis1, 3))
+		die("error creating vector axis1\n");
+	vector_copy_data(axis1, raxis1);
+	if (!normalize_vector(&axis1, axis1))
+		die("error normalizing vector axis1\n");
+	if (!rotate(&rot1, rot1, 20.0f * delta_time, axis1))
+		die("error rotating matrix rot1\n");
 	model = rot1;
 
 	if (!view(&viewm))
