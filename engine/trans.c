@@ -58,17 +58,28 @@ vector_vector_product(float *res, vector vec1, vector vec2)
 bool
 normalize_vector(vector *res, vector vec)
 {
+	vector tmp;
 	unsigned int i;
 	float sum = 0.0f, len; /* sum is the sum of squares */
 
-	if (!create_vector(res, vec.i))
+	if (!create_vector(&tmp, vec.i))
 		return false;
 
 	for (i = 0; i < vec.i; i++)
 		sum += powf(vec.val[i], 2.0f);
+	if (round(sum * 1e7f) == 0.0f) {
+		if (!create_vector(res, vec.i))
+			return false;
+		for (i = 0; i < res->i; i++)
+			res->val[i] = 0.0f;
+		return true;
+	}
 	len = sqrtf(sum);
 	for (i = 0; i < vec.i; i++)
-		res->val[i] = vec.val[i] / len;
+		tmp.val[i] = vec.val[i] / len;
+
+	res->i = tmp.i;
+	res->val = tmp.val;
 
 	return true;
 }

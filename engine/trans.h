@@ -1,6 +1,7 @@
 /*
  * TODO:
  * vector matrix product
+ * sums
  */
 
 #ifndef TRANS_H

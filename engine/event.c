@@ -1,6 +1,7 @@
 #include "event.h"
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <errno.h>
 #include <string.h>
 
@@ -31,13 +32,14 @@ init_keys(char *err)
 }
 
 bool
-add_key(char *err, KeySym keysym,
-        void (*on_press)(void), void (*on_release)(void))
+add_key(char *err, KeySym keysym, void (*on_press)(void),
+        void (*on_release)(void), void (*while_pressed)(void))
 {
 	key_handler.n++;
 	if (key_handler.n * sizeof(Key) > key_handler.size) {
 		key_handler.size = key_handler.n * sizeof(Key);
-		key_handler.keys = (Key *)realloc(key_handler.keys, key_handler.size);
+		key_handler.keys = \
+			(Key *)realloc(key_handler.keys, key_handler.size);
 		if (!key_handler.keys) {
 			err = strerror(errno);
 			return false;
@@ -45,8 +47,10 @@ add_key(char *err, KeySym keysym,
 	}
 
 	key_handler.keys[key_handler.n - 1].keysym = keysym;
+	key_handler.keys[key_handler.n - 1].pressed = false;
 	key_handler.keys[key_handler.n - 1].on_press = on_press;
 	key_handler.keys[key_handler.n - 1].on_release = on_release;
+	key_handler.keys[key_handler.n - 1].while_pressed = while_pressed;
 
 	return true;
 }
@@ -84,6 +88,7 @@ key_event(XEvent *e, bool pressed)
 	keysym = XkbKeycodeToKeysym(display, (KeyCode)ev->keycode, 0, 0);
 	for (i = 0; i < key_handler.n; i++) {
 		if (key_handler.keys[i].keysym == keysym) {
+			key_handler.keys[i].pressed = pressed;
 			if (pressed && key_handler.keys[i].on_press)
 				key_handler.keys[i].on_press();
 			else if (!pressed && key_handler.keys[i].on_release)
@@ -117,4 +122,8 @@ handle_events(void)
 		if (handler[e.type])
 			handler[e.type](&e);
 	}
+	for (i = 0; i < key_handler.n; i++)
+		if (key_handler.keys[i].pressed && \
+		    key_handler.keys[i].while_pressed)
+			key_handler.keys[i].while_pressed();
 }

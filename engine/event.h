@@ -8,8 +8,10 @@
 /* types */
 typedef struct {
 	KeySym keysym;
+	bool pressed;
 	void (*on_press)(void);
 	void (*on_release)(void);
+	void (*while_pressed)(void);
 } Key;
 
 typedef struct {
@@ -20,8 +22,8 @@ typedef struct {
 
 /* functions */
 bool init_keys(char *err);
-bool add_key(char *err, KeySym keysym, 
-             void (*on_press)(void), void (*on_release)(void));
+bool add_key(char *err, KeySym keysym, void (*on_press)(void),
+             void (*on_release)(void), void (*while_pressed)(void));
 void clean_keys(void);
 
 static void expose(XEvent *e);

@@ -8,40 +8,73 @@
 #include "engine/engine_time.h"
 #include "engine/shader.h"
 #include "engine/event.h"
-#include "engine/imgload.h"
 #include "engine/init.h"
-#include "engine/proj.h"
 #include "engine/trans.h"
 #include "engine/util.h"
 #include "engine/window.h"
+
+/* globals */
+vector vel;
 
 /* function definitions */
 void
 move_foreward(void)
 {
-	cam.z -= 50.0f * cosf(cam.angle_y) * (float)delta_time;
-	cam.x -= 50.0f * cosf(1.57f - cam.angle_y) * (float)delta_time;
+	vector tmp;
+
+	if (!create_vector(&tmp, 3))
+		die("error creating vector\n");
+
+	tmp.val[0] = -50.0f * cosf(M_PI_2 - cam.angle_y);
+	tmp.val[2] = -50.0f * cosf(cam.angle_y);
+
+	vel.val[0] += tmp.val[0];
+	vel.val[2] += tmp.val[2];
 }
 
 void
 move_backward(void)
 {
-	cam.z += 50.0f * cosf(cam.angle_y) * (float)delta_time;
-	cam.x += 50.0f * cosf(1.57f - cam.angle_y) * (float)delta_time;
+	vector tmp;
+
+	if (!create_vector(&tmp, 3))
+		die("error creating vector\n");
+
+	tmp.val[0] = 50.0f * cosf(M_PI_2 - cam.angle_y);
+	tmp.val[2] = 50.0f * cosf(cam.angle_y);
+
+	vel.val[0] += tmp.val[0];
+	vel.val[2] += tmp.val[2];
 }
 
 void
 move_left(void)
 {
-	cam.z += 50.0f * cosf(1.57f - cam.angle_y) * (float)delta_time;
-	cam.x -= 50.0f * cosf(cam.angle_y) * (float)delta_time;
+	vector tmp;
+
+	if (!create_vector(&tmp, 3))
+		die("error creating vector\n");
+
+	tmp.val[0] = -50.0f * cosf(cam.angle_y);
+	tmp.val[2] = 50.0f * cosf(M_PI_2 - cam.angle_y);
+
+	vel.val[0] += tmp.val[0];
+	vel.val[2] += tmp.val[2];
 }
 
 void
 move_right(void)
 {
-	cam.z -= 50.0f * cosf(1.57f - cam.angle_y) * (float)delta_time;
-	cam.x += 50.0f * cosf(cam.angle_y) * (float)delta_time;
+	vector tmp;
+
+	if (!create_vector(&tmp, 3))
+		die("error creating vector\n");
+
+	tmp.val[0] = 50.0f * cosf(cam.angle_y);
+	tmp.val[2] = -50.0f * cosf(M_PI_2 - cam.angle_y);
+
+	vel.val[0] += tmp.val[0];
+	vel.val[2] += tmp.val[2];
 }
 
 void
@@ -114,8 +147,23 @@ setup(void)
 	             test_image.width, test_image.height,
 		     0, GL_RGBA, GL_FLOAT, test_image.data);
 
-	if (!add_key(err, XK_w, move_foreward, move_foreward))
+	if (!add_key(err, XK_w, NULL, NULL, move_foreward))
 		die("error adding key: %s", err);
+	if (!add_key(err, XK_s, NULL, NULL, move_backward))
+		die("error adding key: %s", err);
+	if (!add_key(err, XK_a, NULL, NULL, move_left))
+		die("error adding key: %s", err);
+	if (!add_key(err, XK_d, NULL, NULL, move_right))
+		die("error adding key: %s", err);
+	if (!add_key(err, XK_q, NULL, NULL, rot_left))
+		die("error adding key: %s", err);
+	if (!add_key(err, XK_e, NULL, NULL, rot_right))
+		die("error adding key: %s", err);
+
+	if (!create_vector(&vel, 3))
+		die("error creating velocity vector\n");
+
+	current_camera = &cam;
 }
 
 void
@@ -123,25 +171,34 @@ render(void)
 {
 	matrix proj, model, camm, viewm;
 	matrix rot1, cam_rot;
-	vector axis1, cam_axis;
+	vector axis1, cam_axis, tmp;
 	GLint proj_uni, model_uni, view_uni;
 	unsigned int width, height;
 	float aspect;
 	unsigned int dummy;
 
-	float raxis1[] = { 1.0f, 1.0f, 0.0f };
-	if (!create_vector(&axis1, 3))
-		die("error creating vector axis1\n");
-	vector_copy_data(axis1, raxis1);
-	if (!normalize_vector(&axis1, axis1))
-		die("error normalizing vector axis1\n");
+	if (!normalize_vector(&tmp, vel))
+		die("error normalizing vector\n");
+	if (!vector_scalar_product(&tmp, tmp, 50.0f))
+		die("error multiplying vector and scalar\n");
+
+	cam.x += tmp.val[0] * (float)delta_time;
+	cam.y += tmp.val[1] * (float)delta_time;
+	cam.z += tmp.val[2] * (float)delta_time;
+
+	vel.val[0] = vel.val[1] = vel.val[2] = 0.0f;
+
+	//float raxis1[] = { 1.0f, 1.0f, 0.0f };
+	//if (!create_vector(&axis1, 3))
+	//	die("error creating vector axis1\n");
+	//vector_copy_data(axis1, raxis1);
+	//if (!normalize_vector(&axis1, axis1))
+	//	die("error normalizing vector axis1\n");
 	if (!create_simple_matrix(&rot1, 4, 4, 1.0f))
 		die("error creating matrix\n");
-	if (!rotate(&rot1, rot1, 0.0f, axis1))
-		die("error rotating matrix rot1\n");
+	//if (!rotate(&rot1, rot1, 0.0f, axis1))
+	//	die("error rotating matrix rot1\n");
 	model = rot1;
-
-	current_camera = &cam;
 
 	if (!view(&viewm))
 		die("error getting view matrix");
