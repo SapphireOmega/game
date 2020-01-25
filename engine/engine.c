@@ -36,6 +36,8 @@ engine_run()
 	while (running) {
 		update_delta_time();
 		handle_events();
+		if (current_state.update)
+			current_state.update();
 		if (current_state.render)
 			current_state.render();
 	}

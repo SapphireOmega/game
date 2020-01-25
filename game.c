@@ -21,8 +21,10 @@ static void move_foreward(void);
 static void move_backward(void);
 static void move_left(void);
 static void move_right(void);
-static void rot_left(void);
-static void rot_right(void);
+//static void rot_left(void);
+//static void rot_right(void);
+static void rot(float a, float b);
+static void mouse_move(MouseMove m);
 
 static void setup(void);
 static void render(void);
@@ -40,7 +42,7 @@ static struct camera cam = {
 	.angle_x = 0.0f, .angle_y = 0.0f, .angle_z = 0.0f,
 	.fovx = 1.570796f,
 	.proj = PERSP,
-	.n = 0.1f, .f = 100.0f
+	.n = 0.01f, .f = 100.0f
 };
 
 static const float vertices[] = {
@@ -56,8 +58,8 @@ static const GLuint elements[] = {
 	2, 3, 0,
 };
 
-vector vel;
-matrix rot1;
+vector vel, quad_axis;
+matrix quad_rot;
 
 /* function definitions */
 void
@@ -120,16 +122,29 @@ move_right(void)
 	vel.val[2] += tmp.val[2];
 }
 
+//void
+//rot_left(void)
+//{
+//	cam.angle_y += 50.0f * (float)delta_time;
+//}
+//
+//void
+//rot_right(void)
+//{
+//	cam.angle_y -= 50.0f * (float)delta_time;
+//}
+
 void
-rot_left(void)
+rot(float a, float b)
 {
-	cam.angle_y += 50.0f * (float)delta_time;
+	cam.angle_y += a * (float)delta_time;
+	cam.angle_x += b * (float)delta_time;
 }
 
 void
-rot_right(void)
+mouse_move(MouseMove m)
 {
-	cam.angle_y -= 50.0f * (float)delta_time;
+	rot((float)m.x * -1.0f, 0.0f);
 }
 
 void
@@ -137,6 +152,7 @@ setup(void)
 {
 	GLint pos_attrib, col_attrib, tex_attrib, status;
 	char *vs_src, *fs_src, *err;
+	float rquad_axis[] = { 0.0f, 0.0f, 1.0f };
 
 	engine_create_window(800, 600);
 	XAutoRepeatOff(display);
@@ -198,29 +214,31 @@ setup(void)
 		die("error adding key: %s", err);
 	if (!add_key(err, XK_d, NULL, NULL, move_right))
 		die("error adding key: %s", err);
-	if (!add_key(err, XK_q, NULL, NULL, rot_left))
-		die("error adding key: %s", err);
-	if (!add_key(err, XK_e, NULL, NULL, rot_right))
-		die("error adding key: %s", err);
+	//if (!add_key(err, XK_q, NULL, NULL, rot_left))
+	//	die("error adding key: %s", err);
+	//if (!add_key(err, XK_e, NULL, NULL, rot_right))
+	//	die("error adding key: %s", err);
+	mouse_handler.move = mouse_move;
 
 	if (!create_vector(&vel, 3))
 		die("error creating velocity vector\n");
 
 	current_camera = &cam;
 
-	if (!create_simple_matrix(&rot1, 4, 4, 1.0f))
+	if (!create_vector(&quad_axis, 3))
+		die("error creating vector quad_axis\n");
+	vector_copy_data(quad_axis, rquad_axis);
+	if (!normalize_vector(&quad_axis, quad_axis))
+		die("error normalizing vector quad_axis\n");
+
+	if (!create_simple_matrix(&quad_rot, 4, 4, 1.0f))
 		die("error creating matrix\n");
 }
 
 void
-render(void)
+update(void)
 {
-	matrix proj, model, camm, viewm;
-	vector axis1, cam_axis, tmp;
-	GLint proj_uni, model_uni, view_uni;
-	unsigned int width, height;
-	float aspect;
-	unsigned int dummy;
+	vector tmp;
 
 	if (!normalize_vector(&tmp, vel))
 		die("error normalizing vector\n");
@@ -233,15 +251,17 @@ render(void)
 
 	vel.val[0] = vel.val[1] = vel.val[2] = 0.0f;
 
-	float raxis1[] = { 0.0f, 0.0f, 1.0f };
-	if (!create_vector(&axis1, 3))
-		die("error creating vector axis1\n");
-	vector_copy_data(axis1, raxis1);
-	if (!normalize_vector(&axis1, axis1))
-		die("error normalizing vector axis1\n");
-	if (!rotate(&rot1, rot1, 20.0f * delta_time, axis1))
-		die("error rotating matrix rot1\n");
-	model = rot1;
+	//if (!rotate(&quad_rot, quad_rot, 20.0f * delta_time, quad_axis))
+	//	die("error applying rotation to quad_rot\n");
+}
+
+void
+render(void)
+{
+	matrix proj, model, viewm;
+	GLint proj_uni, model_uni, view_uni;
+	unsigned int width, height;
+	float aspect;
 
 	if (!view(&viewm))
 		die("error getting view matrix");
@@ -249,6 +269,8 @@ render(void)
 	aspect = (float)window_attribs.width / (float)window_attribs.height;
 	if (!perspective(&proj, aspect))
 		die("error getting perspective");
+
+	model = quad_rot;
 
 	/* OpenGl uses column-major order (I found out the hard way) */
 	if (!transpose(&model, model))
@@ -287,7 +309,7 @@ cleanup(void)
 int
 main(int argc, char *argv[])
 {
-	GameState game_state = { setup, NULL, render, cleanup };
+	GameState game_state = { setup, update, render, cleanup };
 
 	engine_set_current_state(game_state);
 	engine_run();

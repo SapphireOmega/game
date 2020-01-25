@@ -106,7 +106,8 @@ create_window(XVisualInfo *vi, unsigned int w, unsigned int h)
 	colormap = XCreateColormap(display, root_window, vi->visual, AllocNone);
 
 	swa.colormap = colormap;
-	swa.event_mask = ExposureMask | KeyPressMask | KeyReleaseMask;
+	swa.event_mask = ExposureMask | KeyPressMask | KeyReleaseMask \
+			 | PointerMotionMask;
 	swa.border_pixel = BlackPixel(display, screen_id);
 	swa.background_pixel = WhitePixel(display, screen_id);
 

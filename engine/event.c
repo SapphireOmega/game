@@ -14,9 +14,23 @@ static void (*handler[LASTEvent])(XEvent *e) = {
 	[ClientMessage] = client_message,
 	[KeyPress] = key_press,
 	[KeyRelease] = key_release,
+	[MotionNotify] = mouse_motion,
 };
 
 /* functions */
+void
+expose(XEvent *e)
+{
+	XGetWindowAttributes(display, window, &window_attribs);
+	glViewport(0, 0, window_attribs.width, window_attribs.height);
+}
+
+void
+client_message(XEvent *e)
+{
+	exit_game(EXIT_SUCCESS);
+}
+
 bool
 init_keys(char *err)
 {
@@ -65,19 +79,6 @@ clean_keys(void)
 }
 
 void
-expose(XEvent *e)
-{
-	XGetWindowAttributes(display, window, &window_attribs);
-	glViewport(0, 0, window_attribs.width, window_attribs.height);
-}
-
-void
-client_message(XEvent *e)
-{
-	exit_game(EXIT_SUCCESS);
-}
-
-void
 key_event(XEvent *e, bool pressed)
 {
 	KeySym keysym;
@@ -107,6 +108,42 @@ void
 key_release(XEvent *e)
 {
 	key_event(e, false);
+}
+
+Bool
+predicate(Display *display, XEvent *event, char *arg)
+{
+	if (event->type == MotionNotify) {
+		XMotionEvent *e = (XMotionEvent *)event;
+		if (e->x == window_attribs.width / 2 && \
+		    e->y == window_attribs.height / 2)
+			return True;
+	}
+
+	return False;
+}
+
+void
+mouse_motion(XEvent *e)
+{
+	MouseMove move;
+	int x = ((XMotionEvent *)e)->x, y = ((XMotionEvent *)e)->y;
+	int d; /* dummy */
+	Window rw; /* dummy */
+	XEvent ev;
+
+	move.x = x - mouse.x;
+	move.y = y - mouse.y;
+
+	mouse.x = x;
+	mouse.y = y;
+
+	mouse_handler.move(move);
+
+	XWarpPointer(display, window, window, 0, 0, 0, 0, window_attribs.width / 2, window_attribs.height / 2);
+	XIfEvent(display, &ev, predicate, 0);
+	mouse.x = window_attribs.width / 2;
+	mouse.y = window_attribs.height / 2;
 }
 
 void
