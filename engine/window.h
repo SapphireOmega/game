@@ -42,4 +42,9 @@ static Atom delete_window;
 static bool context_error = false;
 static GLXContext render_context;
 
+static Cursor invisible_cursor;
+static Pixmap bitmap_no_data;
+static XColor black;
+static char no_data[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+
 #endif /* WINDOW_H */

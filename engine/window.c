@@ -102,6 +102,10 @@ void
 create_window(XVisualInfo *vi, unsigned int w, unsigned int h)
 {
 	XSetWindowAttributes swa;
+	char no_data[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+	Cursor invisible_cursor;
+	Pixmap bitmap_no_data;
+	XColor black;
 
 	colormap = XCreateColormap(display, root_window, vi->visual, AllocNone);
 
@@ -121,6 +125,15 @@ create_window(XVisualInfo *vi, unsigned int w, unsigned int h)
 	XStoreName(display, window, "OpenGl & Xlib test");
 	printf("mapping window\n");
 	XMapWindow(display, window);
+
+	black.red = black.green = black.blue = 0;
+	bitmap_no_data = XCreateBitmapFromData(display, window, no_data, 8, 8);
+	invisible_cursor = XCreatePixmapCursor(display, bitmap_no_data, \
+	                                       bitmap_no_data, &black, &black, \
+					       0, 0);
+	XDefineCursor(display, window, invisible_cursor);
+	XFreeCursor(display, invisible_cursor);
+	XFreePixmap(display, bitmap_no_data);
 }
 
 int

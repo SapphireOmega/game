@@ -251,8 +251,8 @@ update(void)
 
 	vel.val[0] = vel.val[1] = vel.val[2] = 0.0f;
 
-	//if (!rotate(&quad_rot, quad_rot, 20.0f * delta_time, quad_axis))
-	//	die("error applying rotation to quad_rot\n");
+	if (!rotate(&quad_rot, quad_rot, 20.0f * delta_time, quad_axis))
+		die("error applying rotation to quad_rot\n");
 }
 
 void
