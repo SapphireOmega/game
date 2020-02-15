@@ -43,18 +43,92 @@ static struct camera cam = {
 	.n = 0.01f, .f = 100.0f
 };
 
+//static const float vertices[] = {
+///*      pos                  color             texcoords */
+//	-0.5f,  0.5f,  0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
+//	 0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+//	 0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
+//	-0.5f, -0.5f,  0.5f, 1.0f, 0.5f, 0.5f, 0.0f, 0.0f,
+//
+//	-0.5f,  0.5f, -0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
+//	 0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+//	 0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
+//	-0.5f, -0.5f, -0.5f, 1.0f, 0.5f, 0.5f, 0.0f, 0.0f,
+//};
+
 static const float vertices[] = {
-/*      pos           color             texcoords */
-	-0.5f,  0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
-	 0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-	 0.5f, -0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
-	-0.5f, -0.5f, 1.0f, 0.5f, 0.5f, 0.0f, 0.0f,
+/*      pos                  color             texcoords */
+	/* front */
+	-0.5f,  0.5f,  0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
+	 0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+	 0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
+	 0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
+	-0.5f, -0.5f,  0.5f, 1.0f, 0.5f, 0.5f, 0.0f, 0.0f,
+	-0.5f,  0.5f,  0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
+
+	/* back */
+	 0.5f,  0.5f, -0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
+	-0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+	-0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
+	-0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
+	 0.5f, -0.5f, -0.5f, 1.0f, 0.5f, 0.5f, 0.0f, 0.0f,
+	 0.5f,  0.5f, -0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
+
+	/* left */
+	-0.5f,  0.5f, -0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
+	-0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+	-0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
+	-0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
+	-0.5f, -0.5f, -0.5f, 1.0f, 0.5f, 0.5f, 0.0f, 0.0f,
+	-0.5f,  0.5f, -0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
+
+	/* right */
+	 0.5f,  0.5f,  0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
+	 0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+	 0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
+	 0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
+	 0.5f, -0.5f,  0.5f, 1.0f, 0.5f, 0.5f, 0.0f, 0.0f,
+	 0.5f,  0.5f,  0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
+
+	 /* top */
+	-0.5f,  0.5f, -0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
+	 0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+	 0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
+	 0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
+	-0.5f,  0.5f,  0.5f, 1.0f, 0.5f, 0.5f, 0.0f, 0.0f,
+	-0.5f,  0.5f, -0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
+ 	
+	/* bottom */
+	-0.5f, -0.5f,  0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
+	 0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+	 0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
+	 0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
+	-0.5f, -0.5f, -0.5f, 1.0f, 0.5f, 0.5f, 0.0f, 0.0f,
+	-0.5f, -0.5f,  0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
 };
 
-static const GLuint elements[] = {
-	0, 1, 2,
-	2, 3, 0,
-};
+// 5, 4, 7, 7, 6, 5
+
+//static const GLuint elements[] = {
+//	/* front */
+//	0, 1, 2,
+//	2, 3, 0,
+//	/* back */
+//	4, 5, 6,
+//	6, 7, 4,
+//	/* left */
+//	4, 0, 3,
+//	3, 7, 4,
+//	/* right */
+//	1, 5, 6,
+//	6, 2, 1,
+//	/* top */
+//	4, 5, 1,
+//	1, 0, 4,
+//	/* bottom */
+//	3, 2, 6,
+//	6, 7, 3
+//};
 
 vector vel, quad_axis;
 matrix quad_rot;
@@ -193,11 +267,11 @@ setup(void)
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices,
 	             GL_STATIC_DRAW);
 
-	printf("creating element buffer\n");
-	glGenBuffers(1, &ebo);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements), elements,
-	             GL_STATIC_DRAW);
+	//printf("creating element buffer\n");
+	//glGenBuffers(1, &ebo);
+	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements), elements,
+	//             GL_STATIC_DRAW);
 
 	printf("creating shader program\n");
 	parse_shader("res/shaders/shader.glsl", &vs_src, &fs_src);
@@ -207,18 +281,18 @@ setup(void)
 
 	pos_attrib = glGetAttribLocation(shader_program, "position");
 	glEnableVertexAttribArray(pos_attrib);
-	glVertexAttribPointer(pos_attrib, 2, GL_FLOAT, GL_FALSE,
-	                      7 * sizeof(float), 0);
+	glVertexAttribPointer(pos_attrib, 3, GL_FLOAT, GL_FALSE,
+	                      8 * sizeof(float), 0);
 
 	col_attrib = glGetAttribLocation(shader_program, "vcolor");
 	glEnableVertexAttribArray(col_attrib);
 	glVertexAttribPointer(col_attrib, 3, GL_FLOAT, GL_FALSE,
-	                      7 * sizeof(float), (void *)(2 * sizeof(float)));
+	                      8 * sizeof(float), (void *)(3 * sizeof(float)));
 
 	tex_attrib = glGetAttribLocation(shader_program, "vtexcoord");
 	glEnableVertexAttribArray(tex_attrib);
 	glVertexAttribPointer(tex_attrib, 2, GL_FLOAT, GL_FALSE,
-	                      7 * sizeof(float), (void *)((5 * sizeof(float))));
+	                      8 * sizeof(float), (void *)((6 * sizeof(float))));
 
 	if (!load_tga_file(&test_image, "res/textures/test.tga"))
 		die("error loading tga file: %s\n", img_strerror(img_err));
@@ -231,6 +305,8 @@ setup(void)
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
 	             test_image.width, test_image.height,
 		     0, GL_RGBA, GL_FLOAT, test_image.data);
+
+	glEnable(GL_DEPTH_TEST);
 
 	if (!add_key(err, XK_w, NULL, NULL, move_foreward))
 		die("error adding key: %s", err);
@@ -320,10 +396,12 @@ render(void)
 	glUniformMatrix4fv(proj_uni, 1, GL_FALSE, proj.val);
 
 	glClearColor(0.0, 0.7, 0.7, 1.0);
-	glClear(GL_COLOR_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	glDrawElements(GL_TRIANGLES, sizeof(elements) / sizeof(GLuint),
-	               GL_UNSIGNED_INT, 0);
+	//glDrawElements(GL_TRIANGLES, sizeof(elements) / sizeof(GLuint),
+	//               GL_UNSIGNED_INT, 0);
+	
+	glDrawArrays(GL_TRIANGLES, 0, 36);
 
 	glXSwapBuffers(display, window);
 }
