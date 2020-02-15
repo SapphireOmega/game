@@ -22,7 +22,7 @@ static matrix viewm;
 static matrix projm;
 
 /* functions */
-bool view(matrix *res);
+bool fps_view(matrix *res);
 bool perspective(matrix *res, float aspect);
 
 #endif

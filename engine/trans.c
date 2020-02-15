@@ -230,17 +230,27 @@ matrix_matrix_product(matrix *res, matrix mat1, matrix mat2)
 	matrix test;
 	unsigned int i, j;
 
-	if (mat1.j != mat2.i)
+	if (mat1.j != mat2.i) {
+		printf("%d, %d, %d, %d\n", mat1.i, mat1.j, mat2.i, mat2.j);
 		return false;
-	if (!create_matrix(res, mat1.i, mat2.j))
+	}
+	if (!create_matrix(res, mat1.i, mat2.j)) {
+		printf("2\n");
 		return false;
+	}
 	for (i = 0; i < res->i; i++) {
-		if (!vector_from_matrix(&tmp1, mat1, i))
+		if (!vector_from_matrix(&tmp1, mat1, i)) {
+			printf("3\n");
 			return false;
-		if (!transpose(&test, mat2)) /* TODO: vector_matrix_product */
+		}
+		if (!transpose(&test, mat2)) { /* TODO: vector_matrix_product */
+			printf("4\n");
 			return false;
-		if (!matrix_vector_product(&tmp2, test, tmp1))
+		}
+		if (!matrix_vector_product(&tmp2, test, tmp1)) {
+			printf("5\n");
 			return false;
+		}
 		for (j = 0; j < tmp2.i; j++)
 			res->val[i * res->j + j] = tmp2.val[j];
 	}

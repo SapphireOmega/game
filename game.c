@@ -21,8 +21,6 @@ static void move_foreward(void);
 static void move_backward(void);
 static void move_left(void);
 static void move_right(void);
-//static void rot_left(void);
-//static void rot_right(void);
 static void rot(float a, float b);
 static void mouse_move(MouseMove m);
 
@@ -139,12 +137,40 @@ rot(float a, float b)
 {
 	cam.angle_y += a * (float)delta_time;
 	cam.angle_x += b * (float)delta_time;
+	if (cam.angle_x > M_PI / 2.0f)
+		cam.angle_x = M_PI / 2.0f;
+	else if (cam.angle_x < -M_PI / 2.0f)
+		cam.angle_x = -M_PI / 2.0f;
 }
 
 void
 mouse_move(MouseMove m)
 {
-	rot((float)m.x * -1.0f, 0.0f);
+	rot((float)m.x * -1.0f, (float)m.y * -1.0f);
+}
+
+void
+left(void)
+{
+	rot(10.0f, 0.0f);
+}
+
+void
+right(void)
+{
+	rot(-10.0f, 0.0f);
+}
+
+void
+up(void)
+{
+	rot(0.0f, 10.0f);
+}
+
+void
+down(void)
+{
+	rot(0.0f, -10.0f);
 }
 
 void
@@ -214,9 +240,13 @@ setup(void)
 		die("error adding key: %s", err);
 	if (!add_key(err, XK_d, NULL, NULL, move_right))
 		die("error adding key: %s", err);
-	//if (!add_key(err, XK_q, NULL, NULL, rot_left))
+	//if (!add_key(err, XK_q, NULL, NULL, left))
 	//	die("error adding key: %s", err);
-	//if (!add_key(err, XK_e, NULL, NULL, rot_right))
+	//if (!add_key(err, XK_e, NULL, NULL, right))
+	//	die("error adding key: %s", err);
+	//if (!add_key(err, XK_r, NULL, NULL,up))
+	//	die("error adding key: %s", err);
+	//if (!add_key(err, XK_f, NULL, NULL,down))
 	//	die("error adding key: %s", err);
 	mouse_handler.move = mouse_move;
 
@@ -251,8 +281,8 @@ update(void)
 
 	vel.val[0] = vel.val[1] = vel.val[2] = 0.0f;
 
-	if (!rotate(&quad_rot, quad_rot, 20.0f * delta_time, quad_axis))
-		die("error applying rotation to quad_rot\n");
+	//if (!rotate(&quad_rot, quad_rot, 20.0f * delta_time, quad_axis))
+	//	die("error applying rotation to quad_rot\n");
 }
 
 void
@@ -263,7 +293,7 @@ render(void)
 	unsigned int width, height;
 	float aspect;
 
-	if (!view(&viewm))
+	if (!fps_view(&viewm))
 		die("error getting view matrix");
 
 	aspect = (float)window_attribs.width / (float)window_attribs.height;

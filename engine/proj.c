@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 bool
-view(matrix *res)
+fps_view(matrix *res)
 {
 	vector axis;
 
@@ -15,7 +15,7 @@ view(matrix *res)
 		0.0f, 0.0f, 0.0f, 1.0f
 	};
 
-	const float raxis[] = { 1.0f, 0.0f, 0.0f };
+	const float raxis[] = { 0.0f, 1.0f, 0.0f };
 
 	if (!create_matrix(res, 4, 4))
 		return false;
@@ -23,16 +23,14 @@ view(matrix *res)
 	if (!create_vector(&axis, 3))
 		return false;
 	vector_copy_data(axis, raxis);
-	if (!rotate(res, *res, current_camera->angle_x, axis))
-		return false;
-	axis.val[0] = 0.0f;
-	axis.val[1] = 1.0f;
+
 	if (!rotate(res, *res, current_camera->angle_y, axis))
 		return false;
+	axis.val[0] = 1.0f;
 	axis.val[1] = 0.0f;
-	axis.val[2] = 1.0f;
-	if (!rotate(res, *res, current_camera->angle_z, axis))
+	if (!rotate(res, *res, current_camera->angle_x, axis))
 		return false;
+
 	if (!inverse_matrix(res, *res))
 		return false;
 
