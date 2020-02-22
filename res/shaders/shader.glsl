@@ -14,9 +14,11 @@ uniform mat4 model;
 uniform mat4 view;
 uniform mat4 proj;
 
+uniform vec3 override_color;
+
 void main()
 {
-	fcolor = vcolor;
+	fcolor = override_color * vcolor;
 	ftexcoord = vtexcoord;
 	gl_Position = proj * view * model * vec4(position, 1.0);
 }

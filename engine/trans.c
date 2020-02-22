@@ -405,6 +405,77 @@ matrix_from_axis_angle(matrix *res, float a, vector vec)
 	return true;
 }
 
+bool
+translate(matrix *res, matrix mat, vector vec)
+{
+	if (mat.i != 4 || mat.j != 4 || vec.i != 3)
+		return false;
+
+	if (!copy_matrix(res, mat))
+		return false;
+
+	res->val[3] += vec.val[0];
+	res->val[7] += vec.val[1];
+	res->val[11] += vec.val[2];
+
+	return true;
+}
+
+bool
+scale_matrix_3d(matrix *res, vector vec)
+{
+	if (vec.i != 3 || !create_simple_matrix(res, 3, 3, 1.0f))
+		return false;
+
+	res->val[0] = vec.val[0];
+	res->val[4] = vec.val[1];
+	res->val[8] = vec.val[2];
+
+	return true;
+}
+
+bool
+scale_matrix_homogeneous(matrix *res, vector vec)
+{
+	if (vec.i != 3 || !create_simple_matrix(res, 4, 4, 1.0f))
+		return false;
+
+	res->val[0] = vec.val[0];
+	res->val[5] = vec.val[1];
+	res->val[10] = vec.val[2];
+
+	return true;
+}
+
+bool
+scale(matrix *res, matrix mat, vector vec)
+{
+	matrix scale;
+
+	if (mat.i == 3 && mat.j == 3) {
+		if (!scale_matrix_3d(&scale, vec))
+			return false;
+	} else if (mat.i == 4 && mat.j == 4) {
+		if (!scale_matrix_homogeneous(&scale, vec))
+			return false;
+	} else {
+		return false;
+	}
+
+	//printf("\n--- BEFORE ---\n");
+	//print_matrix(mat);
+	//printf("\n--- VECTOR ---\n");
+	//print_vector(vec);
+	//printf("\n--- SCALE ---\n");
+	//print_matrix(scale);
+	if (!matrix_matrix_product(res, mat, scale))
+		return false;
+	//printf("\n--- AFTER ---\n");
+	//print_matrix(*res);
+
+	return true;
+}
+
 void
 print_vector(vector vec)
 {

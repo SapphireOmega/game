@@ -2,6 +2,7 @@
  * TODO:
  * vector matrix product
  * sums
+ * error messages
  */
 
 #ifndef TRANS_H
@@ -43,6 +44,10 @@ bool matrix_of_minors(matrix *res, matrix mat);
 bool inverse_matrix(matrix *res, matrix mat);
 bool rotate(matrix *res, matrix mat, float a, vector vec);
 bool matrix_from_axis_angle(matrix *res, float a, vector vec);
+bool translate(matrix *res, matrix mat, vector vec);
+bool scale_matrix_3d(matrix *res, vector vec);
+bool scale_matrix_homogeneous(matrix *res, vector vec);
+bool scale(matrix *res, matrix mat, vector vec);
 void print_vector(vector vec);
 void print_matrix(matrix mat);
 

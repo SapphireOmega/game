@@ -40,7 +40,7 @@ static struct camera cam = {
 	.angle_x = 0.0f, .angle_y = 0.0f, .angle_z = 0.0f,
 	.fovx = 1.570796f,
 	.proj = PERSP,
-	.n = 0.01f, .f = 100.0f
+	.n = 0.05f, .f = 100.0f
 };
 
 //static const float vertices[] = {
@@ -105,6 +105,14 @@ static const float vertices[] = {
 	 0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
 	-0.5f, -0.5f, -0.5f, 1.0f, 0.5f, 0.5f, 0.0f, 0.0f,
 	-0.5f, -0.5f,  0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
+
+	/* floor */
+	-1.0f, -0.5001f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+	 1.0f, -0.5001f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+	 1.0f, -0.5001f,  1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+	 1.0f, -0.5001f,  1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+	-1.0f, -0.5001f,  1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+	-1.0f, -0.5001f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
 };
 
 // 5, 4, 7, 7, 6, 5
@@ -192,6 +200,18 @@ move_right(void)
 
 	vel.val[0] += tmp.val[0];
 	vel.val[2] += tmp.val[2];
+}
+
+void
+move_up(void)
+{
+	vel.val[1] += 50.0f;
+}
+
+void
+move_down(void)
+{
+	vel.val[1] -= 50.0f;
 }
 
 //void
@@ -316,6 +336,10 @@ setup(void)
 		die("error adding key: %s", err);
 	if (!add_key(err, XK_d, NULL, NULL, move_right))
 		die("error adding key: %s", err);
+	if (!add_key(err, XK_space, NULL, NULL, move_up))
+		die("error adding key: %s", err);
+	if (!add_key(err, XK_Shift_L, NULL, NULL, move_down))
+		die("error adding key: %s", err);
 	//if (!add_key(err, XK_q, NULL, NULL, left))
 	//	die("error adding key: %s", err);
 	//if (!add_key(err, XK_e, NULL, NULL, right))
@@ -365,9 +389,13 @@ void
 render(void)
 {
 	matrix proj, model, viewm;
-	GLint proj_uni, model_uni, view_uni;
+	GLint proj_uni, model_uni, view_uni, override_color_uni;
 	unsigned int width, height;
 	float aspect;
+	vector vec;
+
+	const float rvec_translate[3] = { 0.0f, -1.0f, 0.0f };
+	const float rvec_scale[3] = { 1.0f, -1.0f, 1.0f };
 
 	if (!fps_view(&viewm))
 		die("error getting view matrix");
@@ -395,13 +423,62 @@ render(void)
 	proj_uni = glGetUniformLocation(shader_program, "proj");
 	glUniformMatrix4fv(proj_uni, 1, GL_FALSE, proj.val);
 
+	override_color_uni = glGetUniformLocation(shader_program, "override_color");
+	glUniform3f(override_color_uni, 1.0f, 1.0f, 1.0f);
+
 	glClearColor(0.0, 0.7, 0.7, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	//glDrawElements(GL_TRIANGLES, sizeof(elements) / sizeof(GLuint),
 	//               GL_UNSIGNED_INT, 0);
 	
+	/* draw cube */
 	glDrawArrays(GL_TRIANGLES, 0, 36);
+
+	/* only draw reflection when you can actually see it, in other words,
+	 * only if the camera is above the plane */
+	if (current_camera->y > -0.5f) { 
+		/* enable the stencil test to create a reflection */
+		glEnable(GL_STENCIL_TEST);
+
+		/* draw floor */
+		glStencilFunc(GL_ALWAYS, 1, 0xff); /* set any stencil to 1 */
+		glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+		glStencilMask(0xff); /* write to stencil buffer */
+		glDepthMask(GL_FALSE); /* don't write to depth buffer */
+		glClear(GL_STENCIL_BUFFER_BIT); /* clear stencil buffer */
+
+		glDrawArrays(GL_TRIANGLES, 36, 6); /* actually draw floor */
+
+		/* draw cube reflection */
+		glStencilFunc(GL_EQUAL, 1, 0xff); /* pass if equal to 1 */
+		glStencilMask(0x00); /* don't write to stencil buffer */
+		glDepthMask(GL_TRUE); /* write to depth buffer */
+
+		/* back to row-major order to manipulate */
+		if (!transpose(&model, model))
+			die("error transposing model matrix\n");
+		/* move the cube down */
+		if (!create_vector(&vec, 3))
+			die("error creating vector\n");
+		vector_copy_data(vec, rvec_translate);
+		if (!translate(&model, model, vec))
+			die("error translating model matrix\n");
+		vector_copy_data(vec, rvec_scale);
+		if (!scale(&model, model, vec))
+			die("error scaling model matrix\n");
+		/* and again, back to column-major order */
+		if (!transpose(&model, model))
+			die("error transposing model matrix\n");
+
+		glUniformMatrix4fv(model_uni, 1, GL_FALSE, model.val);
+		glUniform3f(override_color_uni, 0.3f, 0.3f, 0.3f); /* darken */
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		glUniform3f(override_color_uni, 1.0f, 1.0f, 1.0f);
+		glDisable(GL_STENCIL_TEST);
+	} else {
+		glDrawArrays(GL_TRIANGLES, 36, 6);
+	}
 
 	glXSwapBuffers(display, window);
 }
