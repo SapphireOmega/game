@@ -107,12 +107,12 @@ static const float vertices[] = {
 	-0.5f, -0.5f,  0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
 
 	/* floor */
-	-1.0f, -0.5001f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-	 1.0f, -0.5001f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-	 1.0f, -0.5001f,  1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-	 1.0f, -0.5001f,  1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-	-1.0f, -0.5001f,  1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-	-1.0f, -0.5001f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+	-1.0f, -0.5001f, -1.0f, 1.0f, 0.0f, 0.5f, 0.0f, 0.0f,
+	 1.0f, -0.5001f, -1.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.0f,
+	 1.0f, -0.5001f,  1.0f, 0.0f, 0.5f, 1.0f, 0.0f, 0.0f,
+	 1.0f, -0.5001f,  1.0f, 0.0f, 0.5f, 1.0f, 0.0f, 0.0f,
+	-1.0f, -0.5001f,  1.0f, 0.0f, 0.5f, 0.5f, 0.0f, 0.0f,
+	-1.0f, -0.5001f, -1.0f, 1.0f, 0.0f, 0.5f, 0.0f, 0.0f,
 };
 
 // 5, 4, 7, 7, 6, 5
@@ -240,7 +240,7 @@ rot(float a, float b)
 void
 mouse_move(MouseMove m)
 {
-	rot((float)m.x * -1.0f, (float)m.y * -1.0f);
+	rot((float)m.x * -0.5f, (float)m.y * -0.5f);
 }
 
 void
@@ -472,7 +472,7 @@ render(void)
 			die("error transposing model matrix\n");
 
 		glUniformMatrix4fv(model_uni, 1, GL_FALSE, model.val);
-		glUniform3f(override_color_uni, 0.3f, 0.3f, 0.3f); /* darken */
+		glUniform3f(override_color_uni, 0.3f, 0.4f, 0.5f); /* darken */
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 		glUniform3f(override_color_uni, 1.0f, 1.0f, 1.0f);
 		glDisable(GL_STENCIL_TEST);
