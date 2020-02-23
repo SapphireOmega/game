@@ -5,16 +5,16 @@
 
 #include <GL/glew.h>
 
-#include "engine/engine.h"
-#include "engine/engine_time.h"
-#include "engine/event.h"
-#include "engine/shader.h"
-#include "engine/state.h"
-#include "engine/imgload.h"
-#include "engine/proj.h"
-#include "engine/trans.h"
-#include "engine/util.h"
-#include "engine/window.h"
+#include <engine/engine.h>
+#include <engine/engine_time.h>
+#include <engine/event.h>
+#include <engine/shader.h>
+#include <engine/state.h>
+#include <engine/imgload.h>
+#include <engine/proj.h>
+#include <engine/trans.h>
+#include <engine/util.h>
+#include <engine/window.h>
 
 /* function declarations */
 static void move_foreward(void);
