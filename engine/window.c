@@ -118,7 +118,7 @@ create_window(XVisualInfo *vi, unsigned int w, unsigned int h)
 
 	window = XCreateWindow(display, root_window, 0, 0, w, h, 0,
 	                       vi->depth, InputOutput, vi->visual,
-			       CWColormap | CWEventMask, &swa);
+	                       CWColormap | CWEventMask, &swa);
 	if (!window)
 		die("failed to create window\n");
 	delete_window = XInternAtom(display, "WM_DELETE_WINDOW", 0);
