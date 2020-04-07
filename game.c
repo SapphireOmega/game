@@ -309,7 +309,7 @@ setup(void)
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
 	             test_image.width, test_image.height,
-		     0, GL_RGBA, GL_FLOAT, test_image.data);
+	             0, GL_RGBA, GL_FLOAT, test_image.data);
 
 	glEnable(GL_DEPTH_TEST);
 
