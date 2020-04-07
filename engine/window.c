@@ -188,7 +188,7 @@ create_context(GLXFBConfig fbc)
 	glXCreateContextAttribsARB = \
 		(glXCreateContextAttribsARBProc) \
 			glXGetProcAddressARB((const GLubyte*)
-		                             "glXCreateContextAttribsARB");
+			                     "glXCreateContextAttribsARB");
 
 	render_context = 0;
 	int (*old_error_handler)(Display *, XErrorEvent *) =
