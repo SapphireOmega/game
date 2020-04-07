@@ -2,17 +2,15 @@
  * error checking in the functions instead of by the program
  * fix all the static shit
  * fix the X connection broken message
- * use shorthand types
+ * use shorthand types and sort out opengl datatypes vs regular c
  * shader abstraction
- * add datatypes other than GLfloat to shader
- * sort out opengl datatypes vs regular c
  * check which variables are necessary to store in the shader structs
  * mipmaps
  * texture LOD
  * error logging
  * cleanup
- * abstracting the rest
- * gamestate system
+ * abstract the rest
+ * gamestate stack
  * collision
  * sound
  */
