@@ -1,3 +1,22 @@
+/* TODO:
+ * error checking in the functions instead of by the program
+ * fix all the static shit
+ * fix the X connection broken message
+ * use shorthand types
+ * shader abstraction
+ * add datatypes other than GLfloat to shader
+ * sort out opengl datatypes vs regular c
+ * check which variables are necessary to store in the shader structs
+ * mipmaps
+ * texture LOD
+ * error logging
+ * cleanup
+ * abstracting the rest
+ * gamestate system
+ * collision
+ * sound
+ */
+
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -30,9 +49,9 @@ static void cleanup(void);
 
 /* globals */
 static GLuint shader_program;
-static GLuint vao;
-static GLuint vbo;
-static GLuint ebo;
+static VertexBuffer *vb;
+static BufferLayout *vb_layout;
+static VertexArray *va;
 static struct tga_file test_image;
 static GLuint tex;
 static struct camera cam = {
@@ -214,18 +233,6 @@ move_down(void)
 	vel.val[1] -= 50.0f;
 }
 
-//void
-//rot_left(void)
-//{
-//	cam.angle_y += 50.0f * (float)delta_time;
-//}
-//
-//void
-//rot_right(void)
-//{
-//	cam.angle_y -= 50.0f * (float)delta_time;
-//}
-
 void
 rot(float a, float b)
 {
@@ -270,49 +277,29 @@ down(void)
 void
 setup(void)
 {
-	GLint pos_attrib, col_attrib, tex_attrib, status;
 	char *vs_src, *fs_src, *err;
 	float rquad_axis[] = { 0.0f, 0.0f, 1.0f };
 
 	engine_create_window(800, 600);
 	XAutoRepeatOff(display);
 
-	printf("creating vertex array\n");
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
-
-	printf("creating vertex buffer\n");
-	glGenBuffers(1, &vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices,
-	             GL_STATIC_DRAW);
-
-	//printf("creating element buffer\n");
-	//glGenBuffers(1, &ebo);
-	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements), elements,
-	//             GL_STATIC_DRAW);
-
-	printf("creating shader program\n");
 	parse_shader("res/shaders/shader.glsl", &vs_src, &fs_src);
 	shader_program = create_shader_program(vs_src, fs_src);
 	glUseProgram(shader_program);
-	printf("shader program created\n");
+	free(vs_src);
+	free(fs_src);
 
-	pos_attrib = glGetAttribLocation(shader_program, "position");
-	glEnableVertexAttribArray(pos_attrib);
-	glVertexAttribPointer(pos_attrib, 3, GL_FLOAT, GL_FALSE,
-	                      8 * sizeof(float), 0);
+	va = create_va(1);
+	vb = create_vb(vertices, sizeof(vertices), GL_FLOAT, sizeof(float));
+	vb_layout = create_buffer_layout(vb, 3);
 
-	col_attrib = glGetAttribLocation(shader_program, "vcolor");
-	glEnableVertexAttribArray(col_attrib);
-	glVertexAttribPointer(col_attrib, 3, GL_FLOAT, GL_FALSE,
-	                      8 * sizeof(float), (void *)(3 * sizeof(float)));
+	buffer_layout_add(vb_layout, "position", 3);
+	buffer_layout_add(vb_layout, "vcolor", 3);
+	buffer_layout_add(vb_layout, "vtexcoord", 2);
 
-	tex_attrib = glGetAttribLocation(shader_program, "vtexcoord");
-	glEnableVertexAttribArray(tex_attrib);
-	glVertexAttribPointer(tex_attrib, 2, GL_FLOAT, GL_FALSE,
-	                      8 * sizeof(float), (void *)((6 * sizeof(float))));
+	va_add(va, vb_layout);
+
+	va_use_shader(va, shader_program);
 
 	if (!load_tga_file(&test_image, "res/textures/test.tga"))
 		die("error loading tga file: %s\n", img_strerror(img_err));
@@ -340,14 +327,6 @@ setup(void)
 		die("error adding key: %s", err);
 	if (!add_key(err, XK_Shift_L, NULL, NULL, move_down))
 		die("error adding key: %s", err);
-	//if (!add_key(err, XK_q, NULL, NULL, left))
-	//	die("error adding key: %s", err);
-	//if (!add_key(err, XK_e, NULL, NULL, right))
-	//	die("error adding key: %s", err);
-	//if (!add_key(err, XK_r, NULL, NULL,up))
-	//	die("error adding key: %s", err);
-	//if (!add_key(err, XK_f, NULL, NULL,down))
-	//	die("error adding key: %s", err);
 	mouse_handler.move = mouse_move;
 
 	if (!create_vector(&vel, 3))
@@ -436,7 +415,8 @@ render(void)
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 
 	/* only draw reflection when you can actually see it, in other words,
-	 * only if the camera is above the plane */
+	 * only if the camera is above the plane
+	 */
 	if (current_camera->y > -0.5f) { 
 		/* enable the stencil test to create a reflection */
 		glEnable(GL_STENCIL_TEST);
@@ -487,8 +467,9 @@ void
 cleanup(void)
 {
 	glDeleteProgram(shader_program);
-	glDeleteBuffers(1, &vbo);
-	glDeleteVertexArrays(1, &vao);
+	destroy_vb(vb);
+	destroy_buffer_layout(vb_layout);
+	destroy_va(va);
 }
 
 int

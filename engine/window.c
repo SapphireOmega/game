@@ -60,7 +60,8 @@ get_best_fb_config(GLXFBConfig *fbc, int fbcnt)
 		if (!vi)
 			continue;
 
-		glXGetFBConfigAttrib(display, fbc[i], GLX_SAMPLE_BUFFERS, &samp_buf);
+		glXGetFBConfigAttrib(display, fbc[i], GLX_SAMPLE_BUFFERS,
+		                     &samp_buf);
 		glXGetFBConfigAttrib(display, fbc[i], GLX_SAMPLES, &samples);
 
 		printf("matching fbconfig %d,"
@@ -110,7 +111,7 @@ create_window(XVisualInfo *vi, unsigned int w, unsigned int h)
 	colormap = XCreateColormap(display, root_window, vi->visual, AllocNone);
 
 	swa.colormap = colormap;
-	swa.event_mask = ExposureMask | KeyPressMask | KeyReleaseMask \
+	swa.event_mask = ExposureMask | KeyPressMask | KeyReleaseMask
 			 | PointerMotionMask;
 	swa.border_pixel = BlackPixel(display, screen_id);
 	swa.background_pixel = WhitePixel(display, screen_id);
@@ -128,9 +129,9 @@ create_window(XVisualInfo *vi, unsigned int w, unsigned int h)
 
 	black.red = black.green = black.blue = 0;
 	bitmap_no_data = XCreateBitmapFromData(display, window, no_data, 8, 8);
-	invisible_cursor = XCreatePixmapCursor(display, bitmap_no_data, \
-	                                       bitmap_no_data, &black, &black, \
-					       0, 0);
+	invisible_cursor = \
+		XCreatePixmapCursor(display, bitmap_no_data, bitmap_no_data,
+		                    &black, &black, 0, 0);
 	XDefineCursor(display, window, invisible_cursor);
 	XFreeCursor(display, invisible_cursor);
 	XFreePixmap(display, bitmap_no_data);
@@ -184,8 +185,10 @@ create_context(GLXFBConfig fbc)
 	};
 
 	glxexts = glXQueryExtensionsString(display, screen_id);
-	glXCreateContextAttribsARB = (glXCreateContextAttribsARBProc)
-		glXGetProcAddressARB((const GLubyte*) "glXCreateContextAttribsARB");
+	glXCreateContextAttribsARB = \
+		(glXCreateContextAttribsARBProc) \
+			glXGetProcAddressARB((const GLubyte*)
+		                             "glXCreateContextAttribsARB");
 
 	render_context = 0;
 	int (*old_error_handler)(Display *, XErrorEvent *) =
@@ -196,12 +199,14 @@ create_context(GLXFBConfig fbc)
 	{
 		printf("glXCreateContextAttribsARB() not found ... "
 		       "using old-style GLX context\n");
-		render_context =
-			glXCreateNewContext(display, fbc, GLX_RGBA_TYPE, 0, True);
+		render_context = \
+			glXCreateNewContext(display, fbc, GLX_RGBA_TYPE, 0,
+			                    True);
 	} else {
 		printf("creating context\n");
-		render_context =
-			glXCreateContextAttribsARB(display, fbc, 0, True, ctxattr);
+		render_context = \
+			glXCreateContextAttribsARB(display, fbc, 0, True,
+			                           ctxattr);
 		XFlush(display);
 		if (context_error || !render_context) {
 			ctxattr[1] = 1;
@@ -209,8 +214,9 @@ create_context(GLXFBConfig fbc)
 			context_error = false;
 			printf("failed to create GL 3.0 context ... "
 			       "using old-style GLX context\n");
-			render_context =
-				glXCreateNewContext(display, fbc, GLX_RGBA_TYPE, 0, True);
+			render_context = \
+				glXCreateNewContext(display, fbc, GLX_RGBA_TYPE,
+				                    0, True);
 		}
 	}
 

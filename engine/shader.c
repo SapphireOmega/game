@@ -7,6 +7,12 @@
 
 #include "util.h"
 
+struct BufferElement {
+	const char *name;
+	unsigned int count;
+	unsigned int offset;
+};
+
 void
 parse_shader(const char *file, char **vs_dst, char **fs_dst)
 {
@@ -105,9 +111,7 @@ create_shader_program(const char *vs_src, const char *fs_src)
 	GLuint fs;
 	GLuint program;
 
-	printf("compiling vertex shader\n");
 	vs = compile_shader(GL_VERTEX_SHADER, vs_src);
-	printf("compiling fragment shader\n");
 	fs = compile_shader(GL_FRAGMENT_SHADER, fs_src);
 	program = glCreateProgram();
 	glAttachShader(program, vs);
@@ -121,3 +125,172 @@ create_shader_program(const char *vs_src, const char *fs_src)
 	return program;
 }
 
+VertexBuffer *
+create_vb(const void *data, size_t size, unsigned int type,
+          size_t type_size)
+{
+	VertexBuffer *vb;
+
+	vb = (VertexBuffer *)malloc(sizeof(VertexBuffer));
+	if (vb == NULL)
+		die("error allocating space for vertex buffer");
+	vb->data = data;
+	vb->size = size;
+	vb->type = type;
+	vb->type_size = type_size;
+
+	glGenBuffers(1, &vb->id);
+	glBindBuffer(GL_ARRAY_BUFFER, vb->id);
+	glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
+
+	return vb;
+}
+
+void
+destroy_vb(VertexBuffer *vb)
+{
+	glDeleteBuffers(1, &vb->id);
+	free(vb);
+}
+
+BufferLayout *
+create_buffer_layout(const VertexBuffer *vb, unsigned int max_count)
+{
+	BufferLayout *layout;
+
+	layout = (BufferLayout *)malloc(sizeof(BufferLayout));
+	if (layout == NULL)
+		die("error allocating space for vertex buffer");
+	layout->elems = (struct BufferElement *) \
+	                malloc(sizeof(struct BufferElement) * max_count);
+	layout->count = 0;
+	layout->max_count = max_count;
+	layout->stride = 0;
+	layout->vb = vb;
+
+	return layout;
+}
+
+void
+destroy_buffer_layout(BufferLayout *layout)
+{
+	free(layout->elems);
+	free(layout);
+}
+
+void
+buffer_layout_add(BufferLayout *layout, const char *name, unsigned int count)
+{
+	unsigned int i;
+
+	if (layout->count >= layout->max_count)
+		die("buffer layout exceeded maximum number of elements: %s",
+		    strerror(errno));
+
+	layout->elems[layout->count].name = name;
+	layout->elems[layout->count].count = count;
+	layout->elems[layout->count].offset = layout->stride;
+
+	layout->count++;
+	layout->stride += count;
+}
+
+VertexArray *
+create_va(unsigned int init_count)
+{
+	VertexArray *va;
+
+	va = (VertexArray *)malloc(sizeof(VertexArray));
+	if (va == NULL)
+		die("error allocating space for vertex array: %s",
+		    strerror(errno));
+
+	va->layouts = (const BufferLayout **) \
+		      malloc(init_count * sizeof(BufferLayout *));
+	if (va->layouts == NULL)
+		die("error allocating space for buffer layouts: %s",
+		    strerror(errno));
+
+	va->count = 0;
+	va->max_count = init_count;
+
+	glGenVertexArrays(1, &va->id);
+
+	return va;
+}
+
+void
+destroy_va(VertexArray *va)
+{
+	free(va->layouts);
+	free(va);
+}
+
+void
+va_add(VertexArray *va, const BufferLayout *layout)
+{
+	if (va->count == va->max_count) {
+		va->max_count *= 2;
+		va->layouts = (const BufferLayout **) \
+			     realloc(va->layouts,
+		                     va->max_count * sizeof(BufferLayout *));
+		if (va->layouts == NULL)
+			die("error reallocating space for buffer layouts: %s",
+			    strerror(errno));
+	}
+
+	va->layouts[va->count] = layout;
+
+	va->count++;
+}
+
+void
+va_use_shader(VertexArray *va, unsigned int shader)
+{
+	unsigned int i, j;
+
+	GLenum e;
+
+	glBindVertexArray(va->id);
+
+	for (i = 0; i < va->count; i++) {
+		const BufferLayout *layout;
+
+		layout = va->layouts[i];
+
+		if (layout->count != layout->max_count)
+			printf("warning: layout not using max element count\n");
+
+		glBindBuffer(GL_ARRAY_BUFFER, layout->vb->id);
+
+		for (j = 0; j < layout->count; j++) {
+			const struct BufferElement *elem;
+			int attrib;
+			GLsizei stride;
+			size_t offset;
+
+			elem = &layout->elems[j];
+
+			stride = layout->stride * layout->vb->type_size;
+			offset = elem->offset * layout->vb->type_size;
+
+			attrib = glGetAttribLocation(shader, elem->name);
+			glEnableVertexAttribArray(attrib);
+			glVertexAttribPointer(attrib, elem->count,
+			                      layout->vb->type, GL_FALSE,
+					      stride, (void *)offset);
+		}
+	}
+}
+
+void
+va_bind(VertexArray *va)
+{
+	glBindVertexArray(va->id);
+}
+
+void
+va_unbind(void)
+{
+	glBindVertexArray(0);
+}

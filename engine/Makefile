@@ -16,5 +16,3 @@ $(MAIN): $(OBJS)
 	$(CC) $(CFLAGS) -fPIC -c $< -o $@
 clean:
 	$(RM) *.o *~ $(MAIN)
-depend: $(SRCS)
-	makedepend $^
