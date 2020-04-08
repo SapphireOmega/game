@@ -2,7 +2,6 @@
  * TODO:
  * vector matrix product
  * sums
- * error messages
  */
 
 #ifndef TRANS_H

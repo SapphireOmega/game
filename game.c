@@ -1,15 +1,14 @@
 /* TODO:
+ * rethink when to use the heap or stack
+ * rethink using typedefs on structs
  * error checking in the functions instead of by the program
- * fix all the static shit
  * fix the X connection broken message
  * use shorthand types and sort out opengl datatypes vs regular c
+ * check if everything is being cleaned up
  * shader abstraction
- * check which variables are necessary to store in the shader structs
+ * texture abstraction
  * mipmaps
- * texture LOD
- * error logging
- * cleanup
- * abstract the rest
+ * opengl error logging
  * gamestate stack
  * collision
  * sound
