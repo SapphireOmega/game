@@ -8,6 +8,15 @@
 #include "engine.h"
 #include "window.h"
 
+/* function declarations */
+static void expose(XEvent *e);
+static void client_message(XEvent *e);
+static void key_event(XEvent *e, bool pressed);
+static void key_press(XEvent *e);
+static void key_release(XEvent *e);
+static Bool predicate(Display *display, XEvent *event, char *arg);
+static void mouse_motion(XEvent *e);
+
 /* globals */
 static void (*handler[LASTEvent])(XEvent *e) = {
 	[Expose] = expose,
@@ -17,68 +26,21 @@ static void (*handler[LASTEvent])(XEvent *e) = {
 	[MotionNotify] = mouse_motion,
 };
 
-/* functions */
-void
+/* function definitions */
+static void
 expose(XEvent *e)
 {
 	XGetWindowAttributes(display, window, &window_attribs);
 	glViewport(0, 0, window_attribs.width, window_attribs.height);
 }
 
-void
+static void
 client_message(XEvent *e)
 {
 	exit_game(EXIT_SUCCESS);
 }
 
-bool
-init_keys(char *err)
-{
-	key_handler.n = 0;
-	key_handler.size = 20 * sizeof(Key);
-	key_handler.keys = (Key *)malloc(key_handler.size);
-	if (!key_handler.keys) {
-		err = strerror(errno);
-		return false;
-	}
-
-	return true;
-}
-
-bool
-add_key(char *err, KeySym keysym, void (*on_press)(void),
-        void (*on_release)(void), void (*while_pressed)(void))
-{
-	key_handler.n++;
-	if (key_handler.n * sizeof(Key) > key_handler.size) {
-		key_handler.size = key_handler.n * sizeof(Key);
-		key_handler.keys = \
-			(Key *)realloc(key_handler.keys, key_handler.size);
-		if (!key_handler.keys) {
-			err = strerror(errno);
-			return false;
-		}
-	}
-
-	key_handler.keys[key_handler.n - 1].keysym = keysym;
-	key_handler.keys[key_handler.n - 1].pressed = false;
-	key_handler.keys[key_handler.n - 1].on_press = on_press;
-	key_handler.keys[key_handler.n - 1].on_release = on_release;
-	key_handler.keys[key_handler.n - 1].while_pressed = while_pressed;
-
-	return true;
-}
-
-void
-clean_keys(void)
-{
-	free(key_handler.keys);
-	key_handler.keys = NULL;
-	key_handler.n = 0;
-	key_handler.size = 0;
-}
-
-void
+static void
 key_event(XEvent *e, bool pressed)
 {
 	KeySym keysym;
@@ -98,19 +60,19 @@ key_event(XEvent *e, bool pressed)
 	}
 }
 
-void
+static void
 key_press(XEvent *e)
 {
 	key_event(e, true);
 }
 
-void
+static void
 key_release(XEvent *e)
 {
 	key_event(e, false);
 }
 
-Bool
+static Bool
 predicate(Display *display, XEvent *event, char *arg)
 {
 	if (event->type == MotionNotify) {
@@ -123,7 +85,7 @@ predicate(Display *display, XEvent *event, char *arg)
 	return False;
 }
 
-void
+static void
 mouse_motion(XEvent *e)
 {
 	MouseMove move;
@@ -145,6 +107,53 @@ mouse_motion(XEvent *e)
 	XCheckIfEvent(display, &ev, predicate, 0);
 	mouse.x = window_attribs.width / 2;
 	mouse.y = window_attribs.height / 2;
+}
+
+bool
+init_keys(char **err)
+{
+	key_handler.n = 0;
+	key_handler.size = 20 * sizeof(Key);
+	key_handler.keys = (Key *)malloc(key_handler.size);
+	if (!key_handler.keys) {
+		*err = strerror(errno);
+		return false;
+	}
+
+	return true;
+}
+
+bool
+add_key(char **err, KeySym keysym, void (*on_press)(void),
+        void (*on_release)(void), void (*while_pressed)(void))
+{
+	key_handler.n++;
+	if (key_handler.n * sizeof(Key) > key_handler.size) {
+		key_handler.size = key_handler.n * sizeof(Key);
+		key_handler.keys = \
+			(Key *)realloc(key_handler.keys, key_handler.size);
+		if (!key_handler.keys) {
+			*err = strerror(errno);
+			return false;
+		}
+	}
+
+	key_handler.keys[key_handler.n - 1].keysym = keysym;
+	key_handler.keys[key_handler.n - 1].pressed = false;
+	key_handler.keys[key_handler.n - 1].on_press = on_press;
+	key_handler.keys[key_handler.n - 1].on_release = on_release;
+	key_handler.keys[key_handler.n - 1].while_pressed = while_pressed;
+
+	return true;
+}
+
+void
+clean_keys(void)
+{
+	free(key_handler.keys);
+	key_handler.keys = NULL;
+	key_handler.n = 0;
+	key_handler.size = 0;
 }
 
 void

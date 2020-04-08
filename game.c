@@ -313,17 +313,17 @@ setup(void)
 
 	glEnable(GL_DEPTH_TEST);
 
-	if (!add_key(err, XK_w, NULL, NULL, move_foreward))
+	if (!add_key(&err, XK_w, NULL, NULL, move_foreward))
 		die("error adding key: %s", err);
-	if (!add_key(err, XK_s, NULL, NULL, move_backward))
+	if (!add_key(&err, XK_s, NULL, NULL, move_backward))
 		die("error adding key: %s", err);
-	if (!add_key(err, XK_a, NULL, NULL, move_left))
+	if (!add_key(&err, XK_a, NULL, NULL, move_left))
 		die("error adding key: %s", err);
-	if (!add_key(err, XK_d, NULL, NULL, move_right))
+	if (!add_key(&err, XK_d, NULL, NULL, move_right))
 		die("error adding key: %s", err);
-	if (!add_key(err, XK_space, NULL, NULL, move_up))
+	if (!add_key(&err, XK_space, NULL, NULL, move_up))
 		die("error adding key: %s", err);
-	if (!add_key(err, XK_Shift_L, NULL, NULL, move_down))
+	if (!add_key(&err, XK_Shift_L, NULL, NULL, move_down))
 		die("error adding key: %s", err);
 	mouse_handler.move = mouse_move;
 
@@ -367,7 +367,6 @@ render(void)
 {
 	matrix proj, model, viewm;
 	GLint proj_uni, model_uni, view_uni, override_color_uni;
-	unsigned int width, height;
 	float aspect;
 	vector vec;
 

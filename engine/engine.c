@@ -1,6 +1,7 @@
 #include "engine.h"
 
 #include <stdlib.h>
+#include <stdbool.h>
 
 #include "engine_time.h"
 #include "event.h"
@@ -8,17 +9,25 @@
 #include "util.h"
 #include "window.h"
 
-void
+/* globals */
+static bool running = true;
+
+/* function declarations */
+static void engine_setup(void);
+static void engine_cleanup(void);
+
+/*function definitions */
+static void
 engine_setup(void)
 {
 	char *err;
 
 	init_time();
-	if (!init_keys(err))
+	if (!init_keys(&err))
 		die("error initializing keys: %s", err);
 }
 
-void
+static void
 engine_cleanup(void)
 {
 	clean_keys();
@@ -27,7 +36,7 @@ engine_cleanup(void)
 }
 
 void
-engine_run()
+engine_run(void)
 {
 	engine_setup();
 	if (current_state.setup)

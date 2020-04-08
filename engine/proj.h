@@ -3,6 +3,8 @@
 
 #include "trans.h"
 
+#include <stdbool.h>
+
 /* enums */
 enum proj_type { PERSP, ORTHO };
 
@@ -17,9 +19,6 @@ struct camera {
 
 /* variables */
 struct camera *current_camera;
-
-static matrix viewm;
-static matrix projm;
 
 /* functions */
 bool fps_view(matrix *res);

@@ -1,8 +1,12 @@
 #include "proj.h"
 
 #include <math.h>
-#include <stdio.h>
 
+/* globals */
+static matrix viewm;
+static matrix projm;
+
+/* function definitions */
 bool
 fps_view(matrix *res)
 {

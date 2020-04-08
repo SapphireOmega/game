@@ -3,6 +3,10 @@
 #include <time.h>
 #include <stdlib.h>
 
+/* globals */
+static struct timespec start, end;
+
+/* function definitions */
 void
 init_time(void)
 {
