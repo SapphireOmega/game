@@ -3,3 +3,4 @@
 *.o
 game
 compile.sh
+engine/libengine.so.1.0
