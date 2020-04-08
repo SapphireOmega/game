@@ -6,7 +6,7 @@
 /* globals */
 static struct timespec start, end;
 
-/* function definitions */
+/* functions */
 void
 init_time(void)
 {

@@ -7,12 +7,14 @@
 
 #include "util.h"
 
+/* structs */
 struct BufferElement {
 	const char *name;
 	unsigned int count;
 	unsigned int offset;
 };
 
+/* functions */
 void
 parse_shader(const char *file, char **vs_dst, char **fs_dst)
 {

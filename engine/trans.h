@@ -9,7 +9,7 @@
 
 #include <stdbool.h>
 
-/* data types */
+/* types */
 typedef struct {
 	unsigned int i;
 	float *val;
@@ -21,7 +21,7 @@ typedef struct {
 	float *val;
 } matrix;
 
-/* function declarations */
+/* functions */
 bool create_vector(vector *vec, unsigned int i);
 void vector_copy_data(vector vec, const float *data);
 bool vector_scalar_product(vector *res, vector vec, float s);

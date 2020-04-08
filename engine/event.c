@@ -8,13 +8,11 @@
 #include "engine.h"
 #include "window.h"
 
-/* function declarations */
+/* forward function declarations */
 static void expose(XEvent *e);
 static void client_message(XEvent *e);
-static void key_event(XEvent *e, bool pressed);
 static void key_press(XEvent *e);
 static void key_release(XEvent *e);
-static Bool predicate(Display *display, XEvent *event, char *arg);
 static void mouse_motion(XEvent *e);
 
 /* globals */
@@ -26,7 +24,7 @@ static void (*handler[LASTEvent])(XEvent *e) = {
 	[MotionNotify] = mouse_motion,
 };
 
-/* function definitions */
+/* functions */
 static void
 expose(XEvent *e)
 {

@@ -32,18 +32,6 @@
 #include <engine/util.h>
 #include <engine/window.h>
 
-/* function declarations */
-static void move_foreward(void);
-static void move_backward(void);
-static void move_left(void);
-static void move_right(void);
-static void rot(float a, float b);
-static void mouse_move(MouseMove m);
-
-static void setup(void);
-static void render(void);
-static void cleanup(void);
-
 /* globals */
 static GLuint shader_program;
 static VertexBuffer *vb;
@@ -157,7 +145,7 @@ static const float vertices[] = {
 vector vel, quad_axis;
 matrix quad_rot;
 
-/* function definitions */
+/* function */
 void
 move_foreward(void)
 {

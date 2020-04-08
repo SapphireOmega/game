@@ -12,11 +12,7 @@
 /* globals */
 static bool running = true;
 
-/* function declarations */
-static void engine_setup(void);
-static void engine_cleanup(void);
-
-/*function definitions */
+/* functions */
 static void
 engine_setup(void)
 {

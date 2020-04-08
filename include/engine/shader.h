@@ -32,7 +32,6 @@ typedef struct {
 
 /* functions */
 GLuint compile_shader(GLenum type, const char *src);
-
 void parse_shader(const char *file, char **vs_dst, char **fs_dst);
 GLuint create_shader_program(const char *vs_src, const char *fs_src);
 

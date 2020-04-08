@@ -7,16 +7,6 @@
 
 #include "util.h"
 
-/* function declarations */
-static void check_glx_version(void);
-static void match_fb_configs(GLXFBConfig **fbc, int *fbcnt);
-static GLXFBConfig get_best_fb_config(GLXFBConfig *fbc, int fbcnt);
-static GLXFBConfig get_fb_config(void);
-static void create_window(XVisualInfo *vi, unsigned int w, unsigned int h);
-static int context_error_handler(Display *display, XErrorEvent *e);
-static bool extension_supported(const char *ext_list, const char *extension);
-static void create_context(GLXFBConfig fbc);
-
 /* globals */
 static int screen_id;
 static Window root_window;
@@ -25,8 +15,8 @@ static Atom delete_window;
 static bool context_error = false;
 static GLXContext render_context;
 
-/* function definitions */
-void
+/* functions */
+static void
 check_glx_version(void)
 {
 	int glx_major;
@@ -37,7 +27,7 @@ check_glx_version(void)
 		die("invalid GLX version (%d, %d)\n", glx_major, glx_minor);
 }
 
-void
+static void
 match_fb_configs(GLXFBConfig **fbc, int *fbcnt)
 {
 	static int visual_attribs[] = {
@@ -62,7 +52,7 @@ match_fb_configs(GLXFBConfig **fbc, int *fbcnt)
 	printf("found %d matching FB configs\n", *fbcnt);
 }
 
-GLXFBConfig
+static GLXFBConfig
 get_best_fb_config(GLXFBConfig *fbc, int fbcnt)
 {
 	int i;
@@ -104,7 +94,7 @@ get_best_fb_config(GLXFBConfig *fbc, int fbcnt)
 	return fbc[best_fbc];
 }
 
-GLXFBConfig
+static GLXFBConfig
 get_fb_config(void)
 {
 	int fbcnt;
@@ -119,7 +109,7 @@ get_fb_config(void)
 	return best_fbc;
 }
 
-void
+static void
 create_window(XVisualInfo *vi, unsigned int w, unsigned int h)
 {
 	XSetWindowAttributes swa;
@@ -157,14 +147,14 @@ create_window(XVisualInfo *vi, unsigned int w, unsigned int h)
 	XFreePixmap(display, bitmap_no_data);
 }
 
-int
+static int
 context_error_handler(Display *display, XErrorEvent *e)
 {
 	context_error = true;
 	return 0;
 }
 
-bool
+static bool
 extension_supported(const char *ext_list, const char *extension)
 {
 	const char *start;
@@ -193,7 +183,7 @@ extension_supported(const char *ext_list, const char *extension)
 	return false;
 }
 
-void
+static void
 create_context(GLXFBConfig fbc)
 {
 	const char *glxexts;

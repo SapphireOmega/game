@@ -6,7 +6,7 @@
 static matrix viewm;
 static matrix projm;
 
-/* function definitions */
+/* functions */
 bool
 fps_view(matrix *res)
 {
