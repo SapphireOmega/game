@@ -33,7 +33,7 @@ img_strerror(enum img_err img_err)
 }
 
 bool
-load_tga_file(struct tga_file *img, const char *filename)
+load_tga_file(struct TGA_File *img, const char *filename)
 {
 	FILE *fd;
 	long img_size;

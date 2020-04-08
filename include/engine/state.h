@@ -3,18 +3,18 @@
 
 /* TODO: stack machine */
 
-/* types */
-typedef struct {
+/* structs */
+struct GameState {
 	void (*setup)(void);
 	void (*update)(void);
 	void (*render)(void);
 	void (*cleanup)(void);
-} GameState;
+};
 
 /* globals */
-GameState current_state;
+struct GameState current_state;
 
 /* functions */
-void engine_set_current_state(GameState state);
+void engine_set_current_state(struct GameState state);
 
 #endif /* STATE_H */

@@ -37,9 +37,9 @@ static GLuint shader_program;
 static VertexBuffer *vb;
 static BufferLayout *vb_layout;
 static VertexArray *va;
-static struct tga_file test_image;
+static struct TGA_File test_image;
 static GLuint tex;
-static struct camera cam = {
+static struct Camera cam = {
 	.x = 0.0f, .y = 0.0f, .z = 1.0f,
 	.angle_x = 0.0f, .angle_y = 0.0f, .angle_z = 0.0f,
 	.fovx = 1.570796f,
@@ -145,7 +145,7 @@ static const float vertices[] = {
 vector vel, quad_axis;
 matrix quad_rot;
 
-/* function */
+/* functions */
 void
 move_foreward(void)
 {
@@ -459,7 +459,7 @@ cleanup(void)
 int
 main(int argc, char *argv[])
 {
-	GameState game_state = { setup, update, render, cleanup };
+	struct GameState game_state = { setup, update, render, cleanup };
 
 	engine_set_current_state(game_state);
 	engine_run();
