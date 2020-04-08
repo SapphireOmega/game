@@ -26,7 +26,7 @@ engine_setup(void)
 static void
 engine_cleanup(void)
 {
-	clean_keys();
+	destroy_keys();
 	XAutoRepeatOn(display);
 	engine_destroy_window();
 }

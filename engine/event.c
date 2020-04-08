@@ -86,7 +86,7 @@ predicate(Display *display, XEvent *event, char *arg)
 static void
 mouse_motion(XEvent *e)
 {
-	MouseMove move;
+	struct MouseMove move;
 	int x = ((XMotionEvent *)e)->x, y = ((XMotionEvent *)e)->y;
 	int d; /* dummy */
 	Window rw; /* dummy */
@@ -111,8 +111,8 @@ bool
 init_keys(char **err)
 {
 	key_handler.n = 0;
-	key_handler.size = 20 * sizeof(Key);
-	key_handler.keys = (Key *)malloc(key_handler.size);
+	key_handler.size = 20 * sizeof(struct Key);
+	key_handler.keys = (struct Key *)malloc(key_handler.size);
 	if (!key_handler.keys) {
 		*err = strerror(errno);
 		return false;
@@ -126,10 +126,11 @@ add_key(char **err, KeySym keysym, void (*on_press)(void),
         void (*on_release)(void), void (*while_pressed)(void))
 {
 	key_handler.n++;
-	if (key_handler.n * sizeof(Key) > key_handler.size) {
-		key_handler.size = key_handler.n * sizeof(Key);
+	if (key_handler.n * sizeof(struct Key) > key_handler.size) {
+		key_handler.size = key_handler.n * sizeof(struct Key);
 		key_handler.keys = \
-			(Key *)realloc(key_handler.keys, key_handler.size);
+			(struct Key *) \
+			realloc(key_handler.keys, key_handler.size);
 		if (!key_handler.keys) {
 			*err = strerror(errno);
 			return false;
@@ -146,7 +147,7 @@ add_key(char **err, KeySym keysym, void (*on_press)(void),
 }
 
 void
-clean_keys(void)
+destroy_keys(void)
 {
 	free(key_handler.keys);
 	key_handler.keys = NULL;

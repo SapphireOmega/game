@@ -6,42 +6,42 @@
 #include <X11/XKBlib.h>
 
 /* types */
-typedef struct {
+struct Key {
 	KeySym keysym;
 	bool pressed;
 	void (*on_press)(void);
 	void (*on_release)(void);
 	void (*while_pressed)(void);
-} Key;
+};
 
-typedef struct {
+struct KeyHandler {
 	unsigned int n;
 	size_t size;
-	Key *keys;
-} KeyHandler;
+	struct Key *keys;
+};
 
-typedef struct {
+struct Mouse {
 	int x, y;
-} Mouse;
+};
 
-typedef struct {
+struct MouseMove {
 	int x, y;
-} MouseMove;
+};
 
-typedef struct {
-	void (*move)(MouseMove move);
-} MouseHandler;
+struct MouseHandler {
+	void (*move)(struct MouseMove move);
+};
+
+/* globals */
+struct KeyHandler key_handler;
+struct Mouse mouse;
+struct MouseHandler mouse_handler;
 
 /* functions */
 bool init_keys(char **err);
 bool add_key(char **err, KeySym keysym, void (*on_press)(void),
              void (*on_release)(void), void (*while_pressed)(void));
-void clean_keys(void);
+void destroy_keys(void);
 void handle_events(void);
-
-/* globals */
-KeyHandler key_handler;
-Mouse mouse;
-MouseHandler mouse_handler;
 
 #endif /* EVENT_H */
