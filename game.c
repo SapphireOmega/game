@@ -1,7 +1,5 @@
 /* TODO:
  * clean up vertecies and matrices
- * rethink when to use the heap or stack
- * rethink using typedefs on structs
  * error checking in the functions instead of by the program
  * fix the X connection broken message
  * use shorthand types and sort out opengl datatypes vs regular c
