@@ -34,7 +34,7 @@
 /* globals */
 static GLuint shader_program;
 static VertexBuffer *vb;
-static BufferLayout *vb_layout;
+static VertexBufferLayout *vb_layout;
 static VertexArray *va;
 static struct TGA_File test_image;
 static GLuint tex;
@@ -275,11 +275,11 @@ setup(void)
 
 	va = create_va(1);
 	vb = create_vb(vertices, sizeof(vertices), GL_FLOAT, sizeof(float));
-	vb_layout = create_buffer_layout(vb, 3);
+	vb_layout = create_vb_layout(vb, 3);
 
-	buffer_layout_add(vb_layout, "position", 3);
-	buffer_layout_add(vb_layout, "vcolor", 3);
-	buffer_layout_add(vb_layout, "vtexcoord", 2);
+	vb_layout_add(vb_layout, "position", 3);
+	vb_layout_add(vb_layout, "vcolor", 3);
+	vb_layout_add(vb_layout, "vtexcoord", 2);
 
 	va_add(va, vb_layout);
 
@@ -451,7 +451,7 @@ cleanup(void)
 {
 	glDeleteProgram(shader_program);
 	destroy_vb(vb);
-	destroy_buffer_layout(vb_layout);
+	destroy_vb_layout(vb_layout);
 	destroy_va(va);
 }
 

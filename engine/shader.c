@@ -155,12 +155,12 @@ destroy_vb(VertexBuffer *vb)
 	free(vb);
 }
 
-BufferLayout *
-create_buffer_layout(const VertexBuffer *vb, unsigned int max_count)
+VertexBufferLayout *
+create_vb_layout(const VertexBuffer *vb, unsigned int max_count)
 {
-	BufferLayout *layout;
+	VertexBufferLayout *layout;
 
-	layout = (BufferLayout *)malloc(sizeof(BufferLayout));
+	layout = (VertexBufferLayout *)malloc(sizeof(VertexBufferLayout));
 	if (layout == NULL)
 		die("error allocating space for vertex buffer");
 	layout->elems = (struct BufferElement *) \
@@ -174,14 +174,14 @@ create_buffer_layout(const VertexBuffer *vb, unsigned int max_count)
 }
 
 void
-destroy_buffer_layout(BufferLayout *layout)
+destroy_vb_layout(VertexBufferLayout *layout)
 {
 	free(layout->elems);
 	free(layout);
 }
 
 void
-buffer_layout_add(BufferLayout *layout, const char *name, unsigned int count)
+vb_layout_add(VertexBufferLayout *layout, const char *name, unsigned int count)
 {
 	unsigned int i;
 
@@ -207,8 +207,8 @@ create_va(unsigned int init_count)
 		die("error allocating space for vertex array: %s",
 		    strerror(errno));
 
-	va->layouts = (const BufferLayout **) \
-		      malloc(init_count * sizeof(BufferLayout *));
+	va->layouts = (const VertexBufferLayout **) \
+		      malloc(init_count * sizeof(VertexBufferLayout *));
 	if (va->layouts == NULL)
 		die("error allocating space for buffer layouts: %s",
 		    strerror(errno));
@@ -224,18 +224,20 @@ create_va(unsigned int init_count)
 void
 destroy_va(VertexArray *va)
 {
+	glDeleteVertexArrays(1, &va->id);
 	free(va->layouts);
 	free(va);
 }
 
 void
-va_add(VertexArray *va, const BufferLayout *layout)
+va_add(VertexArray *va, const VertexBufferLayout *layout)
 {
 	if (va->count == va->max_count) {
 		va->max_count *= 2;
-		va->layouts = (const BufferLayout **) \
+		va->layouts = (const VertexBufferLayout **) \
 			     realloc(va->layouts,
-		                     va->max_count * sizeof(BufferLayout *));
+		                     va->max_count * \
+				     sizeof(VertexBufferLayout *));
 		if (va->layouts == NULL)
 			die("error reallocating space for buffer layouts: %s",
 			    strerror(errno));
@@ -256,7 +258,7 @@ va_use_shader(VertexArray *va, unsigned int shader)
 	glBindVertexArray(va->id);
 
 	for (i = 0; i < va->count; i++) {
-		const BufferLayout *layout;
+		const VertexBufferLayout *layout;
 
 		layout = va->layouts[i];
 

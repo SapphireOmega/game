@@ -22,11 +22,11 @@ typedef struct {
 	unsigned int count;
 	unsigned int max_count;
 	unsigned int stride;
-} BufferLayout;
+} VertexBufferLayout;
 
 typedef struct {
 	unsigned int id;
-	const BufferLayout **layouts;
+	const VertexBufferLayout **layouts;
 	unsigned int count, max_count;
 } VertexArray;
 
@@ -39,15 +39,15 @@ VertexBuffer *create_vb(const void *data, size_t size, unsigned int type,
                         size_t type_size);
 void destroy_vb(VertexBuffer *vb);
 
-BufferLayout *create_buffer_layout(const VertexBuffer *vb,
-                                   unsigned int max_count);
-void destroy_buffer_layout(BufferLayout *layout);
-void buffer_layout_add(BufferLayout *layout, const char *name,
-                       unsigned int count);
+VertexBufferLayout *create_vb_layout(const VertexBuffer *vb,
+                                     unsigned int max_count);
+void destroy_vb_layout(VertexBufferLayout *layout);
+void vb_layout_add(VertexBufferLayout *layout, const char *name,
+                   unsigned int count);
 
 VertexArray *create_va(unsigned int init_count);
 void destroy_va(VertexArray *va);
-void va_add(VertexArray *va, const BufferLayout *layout);
+void va_add(VertexArray *va, const VertexBufferLayout *layout);
 void va_use_shader(VertexArray *va, unsigned int shader); /* also binds va */
 void va_bind(VertexArray *va);
 void va_unbind(void);
