@@ -213,9 +213,9 @@ matrix_matrix_product(Matrix res, Matrix m1, Matrix m2)
 	assert(res.val != m2.val);
 #endif
 
-	for (x = 0; x < m1.j; x++) {
+	for (x = 0; x < m1.i; x++) {
 		for (y = 0; y < m2.j; y++) {
-			val = &res.val[y * res.j + x];
+			val = &res.val[x * res.j + y];
 			*val = 0.0f;
 			for (z = 0; z < m1.j; z++)
 				*val += m1.val[x * m1.j + z] * \
@@ -242,7 +242,7 @@ matrix_multiply_vector_dynamic(Matrix mat, Vector res)
 }
 
 void
-matrix_multiply_matrix_dynamic(Matrix res, Matrix mat)
+matrix_multiply_matrix_dynamic(Matrix mat, Matrix res)
 {
 	Matrix tmp;
 
@@ -515,8 +515,14 @@ inverse(Matrix res, Matrix mat)
 	a = create_dynamic_matrix_empty(mat.i, mat.j);
 
 	cofactors(c, mat);
+	printf("\nCOFACTORS\n");
+	print_matrix(c);
 	transposed(a, c);
+	printf("\nADJUGANT\n");
+	print_matrix(a);
 	det = determinant_from_cofactors(mat, c);
+	printf("\nDETERMINANT\n");
+	printf("%f\n", det);
 	matrix_scalar_product(res, a, 1.0f / det);
 
 	destroy_dynamic_matrix(c);
@@ -537,7 +543,7 @@ homogeneous(Matrix res, Matrix mat)
 #endif
 
 	for (i = 0; i < mat.i * res.j; i++) {
-		if (i % res.j == 0) {
+		if (i % res.j == mat.j) {
 			res.val[i] = 0.0f;
 		} else {
 			res.val[i] = mat.val[x];
@@ -587,7 +593,7 @@ rotation_3d(Matrix res, Vector vec, float a)
 }
 
 void
-rotation_homogeneous_3d(Matrix res, Vector vec, float a)
+rotation_3d_homogeneous(Matrix res, Vector vec, float a)
 {
 	Matrix tmp;
 
@@ -611,7 +617,7 @@ rotate_3d(Matrix res, Vector vec, float a)
 	rot = create_matrix_empty(3, 3);
 
 	rotation_3d(rot, vec, a);
-	matrix_multiply_matrix_stack(3, res, rot);
+	matrix_multiply_matrix_stack(3, rot, res);
 }
 
 void
@@ -627,8 +633,8 @@ rotate_3d_homogeneous(Matrix res, Vector vec, float a)
 
 	rot = create_matrix_empty(4, 4);
 
-	rotation_homogeneous_3d(rot, vec, a);
-	matrix_multiply_matrix_stack(3, res, rot);
+	rotation_3d_homogeneous(rot, vec, a);
+	matrix_multiply_matrix_stack(4, rot, res);
 }
 
 void
@@ -738,7 +744,7 @@ scale(Matrix res, Vector vec)
 	scale = create_dynamic_matrix_empty(res.i, res.j);
 
 	scale_matrix(scale, vec);
-	matrix_multiply_matrix_dynamic(res, scale);
+	matrix_multiply_matrix_dynamic(scale, res);
 
 	destroy_dynamic_matrix(scale);
 }
@@ -758,7 +764,7 @@ scale_homogeneous(Matrix res, Vector vec)
 	scale = create_dynamic_matrix_empty(res.i, res.j);
 
 	scale_matrix_homogeneous(scale, vec);
-	matrix_multiply_matrix_dynamic(res, scale);
+	matrix_multiply_matrix_dynamic(scale, res);
 
 	destroy_dynamic_matrix(scale);
 }

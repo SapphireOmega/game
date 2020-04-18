@@ -52,7 +52,7 @@
                 matrix_vector_product(tmp, mat, res);                          \
                 vector_copy(res, tmp);                                         \
         }
-#define matrix_multiply_matrix_stack(i, res, mat)                              \
+#define matrix_multiply_matrix_stack(i, mat, res)                              \
         {                                                                      \
                 assert(res.val != NULL);                                       \
                 assert(mat.val != NULL);                                       \
@@ -131,7 +131,7 @@ static inline void vector_multiply_scalar(Vector res, float s)
 static inline void matrix_multiply_scalar(Matrix res, float s)
 { matrix_scalar_product(res, res, s); }
 void matrix_multiply_vector_dynamic(Matrix mat, Vector res);
-void matrix_multiply_matrix_dynamic(Matrix res, Matrix mat);
+void matrix_multiply_matrix_dynamic(Matrix mat, Matrix res);
 
 void vector_from_matrix(Vector res, Matrix mat, uint i);
 void matrix_remove_row(Matrix res, Matrix mat, uint i);

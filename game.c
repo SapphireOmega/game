@@ -321,19 +321,17 @@ render(void)
 	projt = create_matrix_empty(4, 4);
 	modelt = create_matrix_empty(4, 4);
 
+	printf("\n--- NEW FRAME ---\n");
 	fps_view(view);
+	printf("\nVIEW\n");
+	print_matrix(view);
 
 	aspect = (float)window_attribs.width / (float)window_attribs.height;
 	perspective(proj, aspect);
-
-	model = quad_rot;
-
-	printf("\n--- NEW FRAME ---\n");
-
-	printf("\nVIEW\n");
-	print_matrix(view);
 	printf("\nPROJECTION\n");
 	print_matrix(proj);
+
+	model = quad_rot;
 	printf("\nMODEL\n");
 	print_matrix(model);
 
@@ -390,10 +388,10 @@ render(void)
 		glDepthMask(GL_TRUE); /* write to depth buffer */
 
 		/* move cube down and flip */
-		tmp_vec = create_vector(3, 0.0f, -1.0f, 0.0f);
-		translated(tmp_model , model, tmp_vec);
 		tmp_vec = create_vector(3, 1.0f, -1.0f, 1.0f);
 		scale(tmp_model, tmp_vec);
+		tmp_vec = create_vector(3, 0.0f, -1.0f, 0.0f);
+		translated(tmp_model , model, tmp_vec);
 		transpose(tmp_model); /* again back to column-major order */
 
 		glUniformMatrix4fv(model_uni, 1, GL_FALSE, tmp_model.val);
@@ -415,6 +413,9 @@ cleanup(void)
 	destroy_vb(vb);
 	destroy_vb_layout(vb_layout);
 	destroy_va(va);
+	destroy_dynamic_vector(vel);
+	destroy_dynamic_vector(quad_axis);
+	destroy_dynamic_matrix(quad_rot);
 }
 
 int
