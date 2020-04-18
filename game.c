@@ -328,6 +328,15 @@ render(void)
 
 	model = quad_rot;
 
+	printf("\n--- NEW FRAME ---\n");
+
+	printf("\nVIEW\n");
+	print_matrix(view);
+	printf("\nPROJECTION\n");
+	print_matrix(proj);
+	printf("\nMODEL\n");
+	print_matrix(model);
+
 	/* OpenGl uses column-major order (I found out the hard way) */
 	transposed(modelt, model);
 	transposed(viewt, view);

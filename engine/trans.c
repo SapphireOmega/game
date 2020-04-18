@@ -252,7 +252,7 @@ matrix_multiply_matrix_dynamic(Matrix res, Matrix mat)
 
 	tmp = create_dynamic_matrix_empty(mat.i, mat.j);
 
-	matrix_matrix_product(tmp, res, mat);
+	matrix_matrix_product(tmp, mat, res);
 	matrix_copy(res, tmp);
 
 	destroy_dynamic_matrix(tmp);
@@ -410,9 +410,16 @@ minors(Matrix res, Matrix mat)
 	tmp2 = create_dynamic_matrix_empty(mat.i - 1, mat.j - 1);
 
 	for (i = 0; i < mat.i * mat.j; i++) {
-		matrix_remove_row(tmp1, mat, i / mat.j);
-		matrix_remove_column(tmp2, tmp1, i / mat.j);
+		printf("\nROW (%d / %d): %d\n", i, mat.j, (uint)floor((float)i / (float)mat.j));
+		printf("COLUMN: %d\n", i % mat.j);
+		matrix_remove_row(tmp1, mat,
+		                  (uint)floor((float)i / (float)mat.j));
+		matrix_remove_column(tmp2, tmp1, i % mat.j);
+		printf("\nSUB MATRIX\n");
+		print_matrix(tmp2);
 		res.val[i] = determinant(tmp2);
+		printf("\nSUB MATRIX DETERMINANT\n");
+		printf("%f\n", res.val[i]);
 	}
 
 	destroy_dynamic_matrix(tmp1);
@@ -450,6 +457,8 @@ cofactors(Matrix res, Matrix mat)
 #endif
 
 	minors(res, mat);
+	printf("\nMINORS\n");
+	print_matrix(res);
 	checker_pattern(res, res);
 }
 
@@ -485,7 +494,7 @@ determinant_from_cofactors(Matrix mat, Matrix cofactors)
 	assert(cofactors.i > 1);
 #endif
 
-	for (i = 0; i < mat.i * mat.j; i++)
+	for (i = 0; i < mat.j; i++)
 		res += cofactors.val[i] * mat.val[i];
 
 	return res;
@@ -505,6 +514,9 @@ inverse(Matrix res, Matrix mat)
 	assert(mat.i == mat.j);
 #endif
 
+	printf("\nBEFORE\n");
+	print_matrix(mat);
+
 	if (mat.i == 1) {
 		res.val[0] = 1.0f / mat.val[0];
 		return;
@@ -514,9 +526,21 @@ inverse(Matrix res, Matrix mat)
 	a = create_dynamic_matrix_empty(mat.i, mat.j);
 
 	cofactors(c, mat);
+	printf("\nCOFACTORS\n");
+	print_matrix(c);
+
 	transposed(a, c);
+	printf("\nTRANSPOSE\n");
+	print_matrix(a);
+
 	det = determinant_from_cofactors(mat, c);
+	printf("\nDETERMINANT\n");
+	printf("%f\n", det);
+
 	matrix_scalar_product(res, a, 1.0f / det);
+	printf("\nAFTER\n");
+	print_matrix(res);
+
 
 	destroy_dynamic_matrix(c);
 	destroy_dynamic_matrix(a);

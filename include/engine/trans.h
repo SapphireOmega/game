@@ -61,7 +61,7 @@
                 assert(mat.i == i);                                            \
                 assert(mat.j == i);                                            \
                 Matrix tmp = create_matrix_empty(i, i);                        \
-                matrix_matrix_product(tmp, res, mat);                          \
+                matrix_matrix_product(tmp, mat, res);                          \
                 matrix_copy(res, tmp);                                         \
         }
 
@@ -84,7 +84,7 @@
 #define matrix_multiply_matrix_stack(i, mat, res)                              \
         {                                                                      \
                 Matrix tmp = create_matrix_empty(i, i);                        \
-                matrix_matrix_product(tmp, res, mat);                          \
+                matrix_matrix_product(tmp, mat, res);                          \
                 matrix_copy(res, tmp);                                         \
         }
 

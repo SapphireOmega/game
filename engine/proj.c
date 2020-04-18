@@ -1,6 +1,7 @@
 #include "proj.h"
 
 #include <math.h>
+#include <stdio.h>
 
 /* globals */
 static Matrix viewm;
@@ -26,12 +27,21 @@ fps_view(Matrix res)
 		0.0f, 0.0f, 0.0f, 1.0f
 	);
 
+
 	matrix_copy(res, tmp);
+	//printf("\nVIEW #1\n");
+	//print_matrix(res);
 	axis = create_vector(3, 0.0f, 1.0f, 0.0f);
 	rotate_3d_homogeneous(res, axis, current_camera->angle_y);
+	//printf("\nVIEW #2\n");
+	//print_matrix(res);
 	axis = create_vector(3, 1.0f, 0.0f, 0.0f);
 	rotate_3d_homogeneous(res, axis, current_camera->angle_x);
+	//printf("\nVIEW #3\n");
+	//print_matrix(res);
 	invert(res);
+	//printf("\nVIEW #4\n");
+	//print_matrix(res);
 }
 
 void
