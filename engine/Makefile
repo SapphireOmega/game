@@ -10,6 +10,10 @@ MAIN = $(NAME).so.1.0
 
 all: $(MAIN)
 	@echo Engine compiled successfully
+
+debug: CFGLAGS += -DDEBUG -g
+debug: all
+
 $(MAIN): $(OBJS)
 	$(CC) $(CFLAGS) -shared -Wl,-soname,$(NAME).so.1 -o $(MAIN) $(OBJS) $(LIBS)
 .c.o:

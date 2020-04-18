@@ -3,7 +3,6 @@
  * error checking in the functions instead of by the program
  * fix the X connection broken message
  * use shorthand types and sort out opengl datatypes vs regular c
- * check if everything is being cleaned up
  * shader abstraction
  * texture abstraction
  * mipmaps
@@ -141,68 +140,36 @@ static const float vertices[] = {
 //	6, 7, 3
 //};
 
-vector vel, quad_axis;
-matrix quad_rot;
+Vector vel, quad_axis;
+Matrix quad_rot;
 
 /* functions */
 void
 move_foreward(void)
 {
-	vector tmp;
-
-	if (!create_vector(&tmp, 3))
-		die("error creating vector\n");
-
-	tmp.val[0] = -50.0f * cosf(M_PI_2 - cam.angle_y);
-	tmp.val[2] = -50.0f * cosf(cam.angle_y);
-
-	vel.val[0] += tmp.val[0];
-	vel.val[2] += tmp.val[2];
+	vel.val[0] += -50.0f * cosf(M_PI_2 - cam.angle_y);
+	vel.val[2] += -50.0f * cosf(cam.angle_y);
 }
 
 void
 move_backward(void)
 {
-	vector tmp;
-
-	if (!create_vector(&tmp, 3))
-		die("error creating vector\n");
-
-	tmp.val[0] = 50.0f * cosf(M_PI_2 - cam.angle_y);
-	tmp.val[2] = 50.0f * cosf(cam.angle_y);
-
-	vel.val[0] += tmp.val[0];
-	vel.val[2] += tmp.val[2];
+	vel.val[0] += 50.0f * cosf(M_PI_2 - cam.angle_y);
+	vel.val[2] += 50.0f * cosf(cam.angle_y);
 }
 
 void
 move_left(void)
 {
-	vector tmp;
-
-	if (!create_vector(&tmp, 3))
-		die("error creating vector\n");
-
-	tmp.val[0] = -50.0f * cosf(cam.angle_y);
-	tmp.val[2] = 50.0f * cosf(M_PI_2 - cam.angle_y);
-
-	vel.val[0] += tmp.val[0];
-	vel.val[2] += tmp.val[2];
+	vel.val[0] += -50.0f * cosf(cam.angle_y);
+	vel.val[2] += 50.0f * cosf(M_PI_2 - cam.angle_y);
 }
 
 void
 move_right(void)
 {
-	vector tmp;
-
-	if (!create_vector(&tmp, 3))
-		die("error creating vector\n");
-
-	tmp.val[0] = 50.0f * cosf(cam.angle_y);
-	tmp.val[2] = -50.0f * cosf(M_PI_2 - cam.angle_y);
-
-	vel.val[0] += tmp.val[0];
-	vel.val[2] += tmp.val[2];
+	vel.val[0] += 50.0f * cosf(cam.angle_y);
+	vel.val[2] += -50.0f * cosf(M_PI_2 - cam.angle_y);
 }
 
 void
@@ -262,7 +229,6 @@ void
 setup(void)
 {
 	char *vs_src, *fs_src, *err;
-	float rquad_axis[] = { 0.0f, 0.0f, 1.0f };
 
 	engine_create_window(800, 600);
 	XAutoRepeatOff(display);
@@ -313,34 +279,28 @@ setup(void)
 		die("error adding key: %s", err);
 	mouse_handler.move = mouse_move;
 
-	if (!create_vector(&vel, 3))
-		die("error creating velocity vector\n");
+	vel = create_dynamic_vector_empty(3);
 
 	current_camera = &cam;
 
-	if (!create_vector(&quad_axis, 3))
-		die("error creating vector quad_axis\n");
-	vector_copy_data(quad_axis, rquad_axis);
-	if (!normalize_vector(&quad_axis, quad_axis))
-		die("error normalizing vector quad_axis\n");
+	quad_axis = create_dynamic_vector(3, 0.0f, 0.0f, 1.0f);
+	normalize_vector(quad_axis);
 
-	if (!create_simple_matrix(&quad_rot, 4, 4, 1.0f))
-		die("error creating matrix\n");
+	quad_rot = create_dynamic_matrix_empty(4, 4);
+	identity(quad_rot);
+	//if (!create_simple_matrix(&quad_rot, 4, 4, 1.0f))
+	//	die("error creating matrix\n");
 }
 
 void
 update(void)
 {
-	vector tmp;
+	normalize_vector(vel);
+	vector_multiply_scalar(vel, 50.0f);
 
-	if (!normalize_vector(&tmp, vel))
-		die("error normalizing vector\n");
-	if (!vector_scalar_product(&tmp, tmp, 50.0f))
-		die("error multiplying vector and scalar\n");
-
-	cam.x += tmp.val[0] * (float)delta_time;
-	cam.y += tmp.val[1] * (float)delta_time;
-	cam.z += tmp.val[2] * (float)delta_time;
+	cam.x += vel.val[0] * (float)delta_time;
+	cam.y += vel.val[1] * (float)delta_time;
+	cam.z += vel.val[2] * (float)delta_time;
 
 	vel.val[0] = vel.val[1] = vel.val[2] = 0.0f;
 
@@ -351,39 +311,36 @@ update(void)
 void
 render(void)
 {
-	matrix proj, model, viewm;
+	Matrix proj, model, view, projt, modelt, viewt;
 	GLint proj_uni, model_uni, view_uni, override_color_uni;
 	float aspect;
-	vector vec;
 
-	const float rvec_translate[3] = { 0.0f, -1.0f, 0.0f };
-	const float rvec_scale[3] = { 1.0f, -1.0f, 1.0f };
+	view = create_matrix_empty(4, 4);
+	proj = create_matrix_empty(4, 4);
+	viewt = create_matrix_empty(4, 4);
+	projt = create_matrix_empty(4, 4);
+	modelt = create_matrix_empty(4, 4);
 
-	if (!fps_view(&viewm))
-		die("error getting view matrix");
+	fps_view(view);
 
 	aspect = (float)window_attribs.width / (float)window_attribs.height;
-	if (!perspective(&proj, aspect))
-		die("error getting perspective");
+	perspective(proj, aspect);
 
 	model = quad_rot;
 
 	/* OpenGl uses column-major order (I found out the hard way) */
-	if (!transpose(&model, model))
-		die("error transposing model matrix\n");
-	if (!transpose(&viewm, viewm))
-		die("error transposing view matrix\n");
-	if (!transpose(&proj, proj))
-		die("error transposing projection matrix\n");
+	transposed(modelt, model);
+	transposed(viewt, view);
+	transposed(projt, proj);
 
 	model_uni = glGetUniformLocation(shader_program, "model");
-	glUniformMatrix4fv(model_uni, 1, GL_FALSE, model.val);
+	glUniformMatrix4fv(model_uni, 1, GL_FALSE, modelt.val);
 
 	view_uni = glGetUniformLocation(shader_program, "view");
-	glUniformMatrix4fv(view_uni, 1, GL_FALSE, viewm.val);
+	glUniformMatrix4fv(view_uni, 1, GL_FALSE, viewt.val);
 
 	proj_uni = glGetUniformLocation(shader_program, "proj");
-	glUniformMatrix4fv(proj_uni, 1, GL_FALSE, proj.val);
+	glUniformMatrix4fv(proj_uni, 1, GL_FALSE, projt.val);
 
 	override_color_uni = glGetUniformLocation(shader_program, "override_color");
 	glUniform3f(override_color_uni, 1.0f, 1.0f, 1.0f);
@@ -401,6 +358,11 @@ render(void)
 	 * only if the camera is above the plane
 	 */
 	if (current_camera->y > -0.5f) { 
+		Vector tmp_vec;
+		Matrix tmp_model;
+
+		tmp_model = create_matrix_empty(4, 4);
+
 		/* enable the stencil test to create a reflection */
 		glEnable(GL_STENCIL_TEST);
 
@@ -418,23 +380,14 @@ render(void)
 		glStencilMask(0x00); /* don't write to stencil buffer */
 		glDepthMask(GL_TRUE); /* write to depth buffer */
 
-		/* back to row-major order to manipulate */
-		if (!transpose(&model, model))
-			die("error transposing model matrix\n");
-		/* move the cube down */
-		if (!create_vector(&vec, 3))
-			die("error creating vector\n");
-		vector_copy_data(vec, rvec_translate);
-		if (!translate(&model, model, vec))
-			die("error translating model matrix\n");
-		vector_copy_data(vec, rvec_scale);
-		if (!scale(&model, model, vec))
-			die("error scaling model matrix\n");
-		/* and again, back to column-major order */
-		if (!transpose(&model, model))
-			die("error transposing model matrix\n");
+		/* move cube down and flip */
+		tmp_vec = create_vector(3, 0.0f, -1.0f, 0.0f);
+		translated(tmp_model , model, tmp_vec);
+		tmp_vec = create_vector(3, 1.0f, -1.0f, 1.0f);
+		scale(tmp_model, tmp_vec);
+		transpose(tmp_model); /* again back to column-major order */
 
-		glUniformMatrix4fv(model_uni, 1, GL_FALSE, model.val);
+		glUniformMatrix4fv(model_uni, 1, GL_FALSE, tmp_model.val);
 		glUniform3f(override_color_uni, 0.3f, 0.4f, 0.5f); /* darken */
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 		glUniform3f(override_color_uni, 1.0f, 1.0f, 1.0f);

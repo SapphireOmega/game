@@ -21,7 +21,7 @@ struct Camera {
 struct Camera *current_camera;
 
 /* functions */
-bool fps_view(matrix *res);
-bool perspective(matrix *res, float aspect);
+void fps_view(Matrix res);
+void perspective(Matrix res, float aspect);
 
 #endif
