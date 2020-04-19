@@ -42,7 +42,7 @@ static struct Camera cam = {
 	.angle_x = 0.0f, .angle_y = 0.0f, .angle_z = 0.0f,
 	.fovx = 1.570796f,
 	.proj = PERSP,
-	.n = 0.05f, .f = 100.0f
+	.n = 0.1f, .f = 10.0f
 };
 
 //static const float vertices[] = {
@@ -147,41 +147,41 @@ Matrix quad_rot;
 void
 move_foreward(void)
 {
-	vel.val[0] += -50.0f * cosf(M_PI_2 - cam.angle_y);
-	vel.val[2] += -50.0f * cosf(cam.angle_y);
+	vel.val[0] += -30.0f * cosf(M_PI_2 - cam.angle_y);
+	vel.val[2] += -30.0f * cosf(cam.angle_y);
 }
 
 void
 move_backward(void)
 {
-	vel.val[0] += 50.0f * cosf(M_PI_2 - cam.angle_y);
-	vel.val[2] += 50.0f * cosf(cam.angle_y);
+	vel.val[0] += 30.0f * cosf(M_PI_2 - cam.angle_y);
+	vel.val[2] += 30.0f * cosf(cam.angle_y);
 }
 
 void
 move_left(void)
 {
-	vel.val[0] += -50.0f * cosf(cam.angle_y);
-	vel.val[2] += 50.0f * cosf(M_PI_2 - cam.angle_y);
+	vel.val[0] += -30.0f * cosf(cam.angle_y);
+	vel.val[2] += 30.0f * cosf(M_PI_2 - cam.angle_y);
 }
 
 void
 move_right(void)
 {
-	vel.val[0] += 50.0f * cosf(cam.angle_y);
-	vel.val[2] += -50.0f * cosf(M_PI_2 - cam.angle_y);
+	vel.val[0] += 30.0f * cosf(cam.angle_y);
+	vel.val[2] += -30.0f * cosf(M_PI_2 - cam.angle_y);
 }
 
 void
 move_up(void)
 {
-	vel.val[1] += 50.0f;
+	vel.val[1] += 30.0f;
 }
 
 void
 move_down(void)
 {
-	vel.val[1] -= 50.0f;
+	vel.val[1] -= 30.0f;
 }
 
 void
@@ -298,6 +298,7 @@ update(void)
 	normalize_vector(vel);
 	vector_multiply_scalar(vel, 50.0f);
 
+	printf("dt: %f\n", (float)delta_time);
 	cam.x += vel.val[0] * (float)delta_time;
 	cam.y += vel.val[1] * (float)delta_time;
 	cam.z += vel.val[2] * (float)delta_time;
@@ -321,19 +322,10 @@ render(void)
 	projt = create_matrix_empty(4, 4);
 	modelt = create_matrix_empty(4, 4);
 
-	printf("\n--- NEW FRAME ---\n");
 	fps_view(view);
-	printf("\nVIEW\n");
-	print_matrix(view);
-
 	aspect = (float)window_attribs.width / (float)window_attribs.height;
 	perspective(proj, aspect);
-	printf("\nPROJECTION\n");
-	print_matrix(proj);
-
 	model = quad_rot;
-	printf("\nMODEL\n");
-	print_matrix(model);
 
 	/* OpenGl uses column-major order (I found out the hard way) */
 	transposed(modelt, model);
@@ -355,9 +347,6 @@ render(void)
 	glClearColor(0.0, 0.7, 0.7, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	//glDrawElements(GL_TRIANGLES, sizeof(elements) / sizeof(GLuint),
-	//               GL_UNSIGNED_INT, 0);
-	
 	/* draw cube */
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 
@@ -369,6 +358,7 @@ render(void)
 		Matrix tmp_model;
 
 		tmp_model = create_matrix_empty(4, 4);
+		matrix_copy(tmp_model, model);
 
 		/* enable the stencil test to create a reflection */
 		glEnable(GL_STENCIL_TEST);
@@ -389,9 +379,9 @@ render(void)
 
 		/* move cube down and flip */
 		tmp_vec = create_vector(3, 1.0f, -1.0f, 1.0f);
-		scale(tmp_model, tmp_vec);
+		scale_homogeneous(tmp_model, tmp_vec);
 		tmp_vec = create_vector(3, 0.0f, -1.0f, 0.0f);
-		translated(tmp_model , model, tmp_vec);
+		translate(tmp_model, tmp_vec);
 		transpose(tmp_model); /* again back to column-major order */
 
 		glUniformMatrix4fv(model_uni, 1, GL_FALSE, tmp_model.val);

@@ -515,14 +515,8 @@ inverse(Matrix res, Matrix mat)
 	a = create_dynamic_matrix_empty(mat.i, mat.j);
 
 	cofactors(c, mat);
-	printf("\nCOFACTORS\n");
-	print_matrix(c);
 	transposed(a, c);
-	printf("\nADJUGANT\n");
-	print_matrix(a);
 	det = determinant_from_cofactors(mat, c);
-	printf("\nDETERMINANT\n");
-	printf("%f\n", det);
 	matrix_scalar_product(res, a, 1.0f / det);
 
 	destroy_dynamic_matrix(c);
@@ -763,6 +757,7 @@ scale_homogeneous(Matrix res, Vector vec)
 
 	scale = create_dynamic_matrix_empty(res.i, res.j);
 
+	identity(scale);
 	scale_matrix_homogeneous(scale, vec);
 	matrix_multiply_matrix_dynamic(scale, res);
 

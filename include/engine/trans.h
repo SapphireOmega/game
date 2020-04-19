@@ -153,7 +153,7 @@ static inline void invert(Matrix res) { inverse(res, res); }
 void homogeneous(Matrix res, Matrix mat);
 
 void rotation_3d(Matrix res, Vector vec, float a);
-void rotation_homogeneous_3d(Matrix res, Vector vec, float a);
+void rotation_3d_homogeneous(Matrix res, Vector vec, float a);
 /* Same functions as above, but multiply existing matrices with the rotations */
 void rotate_3d(Matrix res, Vector vec, float a);
 void rotate_3d_homogeneous(Matrix res, Vector vec, float a);

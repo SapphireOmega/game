@@ -11,8 +11,8 @@ static Matrix projm;
 void
 fps_view(Matrix res)
 {
-	Matrix tmp;
-	Vector axis;
+	Vector vec;
+	Matrix rot;
 
 #ifndef DEBUG
 	assert(res.val != NULL);
@@ -20,28 +20,47 @@ fps_view(Matrix res)
 	assert(res.j == 4);
 #endif
 
-	tmp = create_matrix(4, 4,
-		1.0f, 0.0f, 0.0f, current_camera->x,
-		0.0f, 1.0f, 0.0f, current_camera->y,
-		0.0f, 0.0f, 1.0f, current_camera->z,
-		0.0f, 0.0f, 0.0f, 1.0f
+	rot = create_matrix_empty(3, 3);
+	vec = create_vector(3, 0.0f, 1.0f, 0.0f);
+	rotation_3d(rot, vec, current_camera->angle_y);
+	vec = create_vector(3, 1.0f, 0.0f, 0.0f);
+	matrix_multiply_vector_stack(3, rot, vec);
+	rotate_3d(rot, vec, current_camera->angle_x);
+	homogeneous(res, rot);
+	vec = create_vector(3,
+		current_camera->x,
+		current_camera->y,
+		current_camera->z
 	);
-
-
-	matrix_copy(res, tmp);
-	printf("\nVIEW #1\n");
-	print_matrix(res);
-	axis = create_vector(3, 0.0f, 1.0f, 0.0f);
-	rotate_3d_homogeneous(res, axis, current_camera->angle_y);
-	printf("\nVIEW #2\n");
-	print_matrix(res);
-	axis = create_vector(3, 1.0f, 0.0f, 0.0f);
-	rotate_3d_homogeneous(res, axis, current_camera->angle_x);
-	printf("\nVIEW #3\n");
-	print_matrix(res);
+	translate(res, vec);
 	invert(res);
-	printf("\nVIEW #4\n");
-	print_matrix(res);
+
+	//rotation_3d_homogeneous(res, vec, current_camera->angle_y);
+	//vec = create_vector(3, 1.0f, 0.0f, 0.0f);
+	//matrix_multiply_vector_stack(3, res, vec);
+	//rotate_3d_homogeneous(res, vec, current_camera->angle_x);
+	//vec = create_vector(3,
+	//	current_camera->x,
+	//	current_camera->y,
+	//	current_camera->z
+	//);
+	//translate(res, vec);
+	//invert(res);
+
+	//tmp = create_matrix(4, 4,
+	//	1.0f, 0.0f, 0.0f, current_camera->x,
+	//	0.0f, 1.0f, 0.0f, current_camera->y,
+	//	0.0f, 0.0f, 1.0f, current_camera->z,
+	//	0.0f, 0.0f, 0.0f, 1.0f
+	//);
+
+
+	//matrix_copy(res, tmp);
+	//axis = create_vector(3, 0.0f, 1.0f, 0.0f);
+	//rotate_3d_homogeneous(res, axis, current_camera->angle_y);
+	//axis = create_vector(3, 1.0f, 0.0f, 0.0f);
+	//rotate_3d_homogeneous(res, axis, current_camera->angle_x);
+	//invert(res);
 }
 
 void
