@@ -147,41 +147,41 @@ Matrix quad_rot;
 void
 move_foreward(void)
 {
-	vel.val[0] += -30.0f * cosf(M_PI_2 - cam.angle_y);
-	vel.val[2] += -30.0f * cosf(cam.angle_y);
+	vel.val[0] += -5.0f * cosf(M_PI_2 - cam.angle_y);
+	vel.val[2] += -5.0f * cosf(cam.angle_y);
 }
 
 void
 move_backward(void)
 {
-	vel.val[0] += 30.0f * cosf(M_PI_2 - cam.angle_y);
-	vel.val[2] += 30.0f * cosf(cam.angle_y);
+	vel.val[0] += 5.0f * cosf(M_PI_2 - cam.angle_y);
+	vel.val[2] += 5.0f * cosf(cam.angle_y);
 }
 
 void
 move_left(void)
 {
-	vel.val[0] += -30.0f * cosf(cam.angle_y);
-	vel.val[2] += 30.0f * cosf(M_PI_2 - cam.angle_y);
+	vel.val[0] += -5.0f * cosf(cam.angle_y);
+	vel.val[2] += 5.0f * cosf(M_PI_2 - cam.angle_y);
 }
 
 void
 move_right(void)
 {
-	vel.val[0] += 30.0f * cosf(cam.angle_y);
-	vel.val[2] += -30.0f * cosf(M_PI_2 - cam.angle_y);
+	vel.val[0] += 5.0f * cosf(cam.angle_y);
+	vel.val[2] += -5.0f * cosf(M_PI_2 - cam.angle_y);
 }
 
 void
 move_up(void)
 {
-	vel.val[1] += 30.0f;
+	vel.val[1] += 5.0f;
 }
 
 void
 move_down(void)
 {
-	vel.val[1] -= 30.0f;
+	vel.val[1] -= 5.0f;
 }
 
 void
@@ -198,32 +198,32 @@ rot(float a, float b)
 void
 mouse_move(struct MouseMove m)
 {
-	rot((float)m.x * -0.5f, (float)m.y * -0.5f);
+	rot((float)m.x * -0.05f, (float)m.y * -0.05f);
 }
 
-void
-left(void)
-{
-	rot(10.0f, 0.0f);
-}
-
-void
-right(void)
-{
-	rot(-10.0f, 0.0f);
-}
-
-void
-up(void)
-{
-	rot(0.0f, 10.0f);
-}
-
-void
-down(void)
-{
-	rot(0.0f, -10.0f);
-}
+//void
+//left(void)
+//{
+//	rot(10.0f, 0.0f);
+//}
+//
+//void
+//right(void)
+//{
+//	rot(-10.0f, 0.0f);
+//}
+//
+//void
+//up(void)
+//{
+//	rot(0.0f, 10.0f);
+//}
+//
+//void
+//down(void)
+//{
+//	rot(0.0f, -10.0f);
+//}
 
 void
 setup(void)
@@ -296,9 +296,8 @@ void
 update(void)
 {
 	normalize_vector(vel);
-	vector_multiply_scalar(vel, 50.0f);
+	vector_multiply_scalar(vel, 5.0f);
 
-	printf("dt: %f\n", (float)delta_time);
 	cam.x += vel.val[0] * (float)delta_time;
 	cam.y += vel.val[1] * (float)delta_time;
 	cam.z += vel.val[2] * (float)delta_time;
