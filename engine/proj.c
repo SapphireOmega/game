@@ -37,7 +37,7 @@ fps_view(Matrix res)
 }
 
 void
-perspective(Matrix res, float aspect)
+projection(Matrix res, float aspect)
 {
 	float t, b, l, r, n, f;
 	Matrix tmp;
@@ -55,12 +55,21 @@ perspective(Matrix res, float aspect)
 	r = t * aspect;
 	l = -r;
 
-	tmp = create_matrix(4, 4,
-		2.0f * n / (r - l), 0.0f, (l + r) / (r - l), 0.0f,
-		0.0f, 2.0f * n / (t - b), (b + t) / (t - b), 0.0f,
-		0.0f, 0.0f, -(f + n) / (f - n), -2.0f * f * n / (f - n),
-		0.0f, 0.0f, -1.0f, 0.0f
-	);
+	if (current_camera->proj == PERSP) {
+		tmp = create_matrix(4, 4,
+			2.0f * n / (r - l), 0.0f, (l + r) / (r - l), 0.0f,
+			0.0f, 2.0f * n / (t - b), (b + t) / (t - b), 0.0f,
+			0.0f, 0.0f, -(f + n) / (f - n), -2.0f * f * n / (f - n),
+			0.0f, 0.0f, -1.0f, 0.0f
+		);
+	} else if (current_camera->proj == ORTHO) {
+		tmp = create_matrix(4, 4,
+			2.0f / (r - l), 0.0f, 0.0f, - (r + l) / (r - l),
+			0.0f, 2.0f / (t - b), 0.0f, - (t + b) / (t - b),
+			0.0f, 0.0f, -2.0f / (f - n), - (f + n) / (f - n),
+			0.0f, 0.0f, 0.0f, 1.0f
+		);
+	}
 
 	matrix_copy(res, tmp);
 }

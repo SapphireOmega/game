@@ -22,6 +22,7 @@ struct Camera *current_camera;
 
 /* functions */
 void fps_view(Matrix res);
-void perspective(Matrix res, float aspect);
+
+void projection(Matrix res, float aspect);
 
 #endif

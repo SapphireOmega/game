@@ -27,7 +27,7 @@ static void
 engine_cleanup(void)
 {
 	destroy_keys();
-	XAutoRepeatOn(display);
+	//XAutoRepeatOn(display);
 	engine_destroy_window();
 }
 

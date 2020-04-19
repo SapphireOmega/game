@@ -38,7 +38,7 @@ static VertexArray *va;
 static struct TGA_File test_image;
 static GLuint tex;
 static struct Camera cam = {
-	.x = 0.0f, .y = 0.0f, .z = 1.0f,
+	.x = 0.0f, .y = 0.0f, .z = 3.0f,
 	.angle_x = 0.0f, .angle_y = 0.0f, .angle_z = 0.0f,
 	.fovx = 1.570796f,
 	.proj = PERSP,
@@ -109,12 +109,12 @@ static const float vertices[] = {
 	-0.5f, -0.5f,  0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
 
 	/* floor */
-	-1.0f, -0.5001f, -1.0f, 1.0f, 0.0f, 0.5f, 0.0f, 0.0f,
-	 1.0f, -0.5001f, -1.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.0f,
-	 1.0f, -0.5001f,  1.0f, 0.0f, 0.5f, 1.0f, 0.0f, 0.0f,
-	 1.0f, -0.5001f,  1.0f, 0.0f, 0.5f, 1.0f, 0.0f, 0.0f,
-	-1.0f, -0.5001f,  1.0f, 0.0f, 0.5f, 0.5f, 0.0f, 0.0f,
-	-1.0f, -0.5001f, -1.0f, 1.0f, 0.0f, 0.5f, 0.0f, 0.0f,
+	-1.5f, -0.5001f, -1.5f, 2.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+	 1.5f, -0.5001f, -1.5f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+	 1.5f, -0.5001f,  1.5f, 0.0f, 1.0f, 2.0f, 0.0f, 0.0f,
+	 1.5f, -0.5001f,  1.5f, 0.0f, 1.0f, 2.0f, 0.0f, 0.0f,
+	-1.5f, -0.5001f,  1.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f,
+	-1.5f, -0.5001f, -1.5f, 2.0f, 0.0f, 1.0f, 0.0f, 0.0f,
 };
 
 // 5, 4, 7, 7, 6, 5
@@ -140,48 +140,48 @@ static const float vertices[] = {
 //	6, 7, 3
 //};
 
-Vector vel, quad_axis;
-Matrix quad_rot;
+Vector vel, cube_rot_axis;
+Matrix cube_rot, cube_move;
 
 /* functions */
 void
 move_foreward(void)
 {
-	vel.val[0] += -5.0f * cosf(M_PI_2 - cam.angle_y);
-	vel.val[2] += -5.0f * cosf(cam.angle_y);
+	vel.val[0] += -3.0f * cosf(M_PI_2 - cam.angle_y);
+	vel.val[2] += -3.0f * cosf(cam.angle_y);
 }
 
 void
 move_backward(void)
 {
-	vel.val[0] += 5.0f * cosf(M_PI_2 - cam.angle_y);
-	vel.val[2] += 5.0f * cosf(cam.angle_y);
+	vel.val[0] += 3.0f * cosf(M_PI_2 - cam.angle_y);
+	vel.val[2] += 3.0f * cosf(cam.angle_y);
 }
 
 void
 move_left(void)
 {
-	vel.val[0] += -5.0f * cosf(cam.angle_y);
-	vel.val[2] += 5.0f * cosf(M_PI_2 - cam.angle_y);
+	vel.val[0] += -3.0f * cosf(cam.angle_y);
+	vel.val[2] += 3.0f * cosf(M_PI_2 - cam.angle_y);
 }
 
 void
 move_right(void)
 {
-	vel.val[0] += 5.0f * cosf(cam.angle_y);
-	vel.val[2] += -5.0f * cosf(M_PI_2 - cam.angle_y);
+	vel.val[0] += 3.0f * cosf(cam.angle_y);
+	vel.val[2] += -3.0f * cosf(M_PI_2 - cam.angle_y);
 }
 
 void
 move_up(void)
 {
-	vel.val[1] += 5.0f;
+	vel.val[1] += 3.0f;
 }
 
 void
 move_down(void)
 {
-	vel.val[1] -= 5.0f;
+	vel.val[1] -= 3.0f;
 }
 
 void
@@ -229,9 +229,10 @@ void
 setup(void)
 {
 	char *vs_src, *fs_src, *err;
+	Vector cube_move_axis;
 
 	engine_create_window(800, 600);
-	XAutoRepeatOff(display);
+	//XAutoRepeatOff(display);
 
 	parse_shader("res/shaders/shader.glsl", &vs_src, &fs_src);
 	shader_program = create_shader_program(vs_src, fs_src);
@@ -283,20 +284,25 @@ setup(void)
 
 	current_camera = &cam;
 
-	quad_axis = create_dynamic_vector(3, 0.0f, 0.0f, 1.0f);
-	normalize_vector(quad_axis);
+	cube_rot_axis = create_dynamic_vector(3, 0.0f, 1.0f, 0.0f);
+	normalize_vector(cube_rot_axis);
 
-	quad_rot = create_dynamic_matrix_empty(4, 4);
-	identity(quad_rot);
-	//if (!create_simple_matrix(&quad_rot, 4, 4, 1.0f))
-	//	die("error creating matrix\n");
+	cube_rot = create_dynamic_matrix_empty(4, 4);
+	identity(cube_rot);
+
+	cube_move = create_dynamic_matrix_empty(4, 4);
+	cube_move_axis = create_vector(3, 1.0f, 0.0f, 1.0f);
+	normalize_vector(cube_move_axis);
+	rotation_3d_homogeneous(cube_move, cube_move_axis, 0.955f);
+	cube_move_axis = create_vector(3, 0.0f, 0.366f, 0.0f);
+	translate(cube_move, cube_move_axis);
 }
 
 void
 update(void)
 {
 	normalize_vector(vel);
-	vector_multiply_scalar(vel, 5.0f);
+	vector_multiply_scalar(vel, 3.0f);
 
 	cam.x += vel.val[0] * (float)delta_time;
 	cam.y += vel.val[1] * (float)delta_time;
@@ -304,27 +310,30 @@ update(void)
 
 	vel.val[0] = vel.val[1] = vel.val[2] = 0.0f;
 
-	//if (!rotate(&quad_rot, quad_rot, 20.0f * delta_time, quad_axis))
-	//	die("error applying rotation to quad_rot\n");
+	rotate_3d_homogeneous(cube_rot, cube_rot_axis, 1.0f * delta_time);
 }
 
 void
 render(void)
 {
-	Matrix proj, model, view, projt, modelt, viewt;
+	Matrix proj, model, view, projt, modelt, viewt, i;
 	GLint proj_uni, model_uni, view_uni, override_color_uni;
 	float aspect;
 
+	i = create_matrix_empty(4, 4);
+	identity(i);
+
 	view = create_matrix_empty(4, 4);
 	proj = create_matrix_empty(4, 4);
+	model = create_matrix_empty(4, 4);
 	viewt = create_matrix_empty(4, 4);
 	projt = create_matrix_empty(4, 4);
 	modelt = create_matrix_empty(4, 4);
 
 	fps_view(view);
 	aspect = (float)window_attribs.width / (float)window_attribs.height;
-	perspective(proj, aspect);
-	model = quad_rot;
+	projection(proj, aspect);
+	matrix_matrix_product(model, cube_rot, cube_move);
 
 	/* OpenGl uses column-major order (I found out the hard way) */
 	transposed(modelt, model);
@@ -363,6 +372,7 @@ render(void)
 		glEnable(GL_STENCIL_TEST);
 
 		/* draw floor */
+		glUniformMatrix4fv(model_uni, 1, GL_FALSE, i.val);
 		glStencilFunc(GL_ALWAYS, 1, 0xff); /* set any stencil to 1 */
 		glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 		glStencilMask(0xff); /* write to stencil buffer */
@@ -384,11 +394,12 @@ render(void)
 		transpose(tmp_model); /* again back to column-major order */
 
 		glUniformMatrix4fv(model_uni, 1, GL_FALSE, tmp_model.val);
-		glUniform3f(override_color_uni, 0.3f, 0.4f, 0.5f); /* darken */
+		glUniform3f(override_color_uni, 0.6f, 0.8f, 1.0f); /* darken */
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 		glUniform3f(override_color_uni, 1.0f, 1.0f, 1.0f);
 		glDisable(GL_STENCIL_TEST);
 	} else {
+		glUniformMatrix4fv(model_uni, 1, GL_FALSE, i.val);
 		glDrawArrays(GL_TRIANGLES, 36, 6);
 	}
 
@@ -403,8 +414,9 @@ cleanup(void)
 	destroy_vb_layout(vb_layout);
 	destroy_va(va);
 	destroy_dynamic_vector(vel);
-	destroy_dynamic_vector(quad_axis);
-	destroy_dynamic_matrix(quad_rot);
+	destroy_dynamic_vector(cube_rot_axis);
+	destroy_dynamic_matrix(cube_rot);
+	destroy_dynamic_matrix(cube_move);
 }
 
 int
