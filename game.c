@@ -42,7 +42,7 @@ static struct Camera cam = {
 	.angle_x = 0.0f, .angle_y = 0.0f, .angle_z = 0.0f,
 	.fovx = 1.570796f,
 	.proj = PERSP,
-	.n = 0.1f, .f = 10.0f
+	.n = 0.2f, .f = 10.0f
 };
 
 //static const float vertices[] = {
@@ -147,41 +147,41 @@ Matrix cube_rot, cube_move;
 void
 move_foreward(void)
 {
-	vel.val[0] += -3.0f * cosf(M_PI_2 - cam.angle_y);
-	vel.val[2] += -3.0f * cosf(cam.angle_y);
+	vel.val[0] += -0.5f * cosf(M_PI_2 - cam.angle_y);
+	vel.val[2] += -0.5f * cosf(cam.angle_y);
 }
 
 void
 move_backward(void)
 {
-	vel.val[0] += 3.0f * cosf(M_PI_2 - cam.angle_y);
-	vel.val[2] += 3.0f * cosf(cam.angle_y);
+	vel.val[0] += 0.5f * cosf(M_PI_2 - cam.angle_y);
+	vel.val[2] += 0.5f * cosf(cam.angle_y);
 }
 
 void
 move_left(void)
 {
-	vel.val[0] += -3.0f * cosf(cam.angle_y);
-	vel.val[2] += 3.0f * cosf(M_PI_2 - cam.angle_y);
+	vel.val[0] += -0.5f * cosf(cam.angle_y);
+	vel.val[2] += 0.5f * cosf(M_PI_2 - cam.angle_y);
 }
 
 void
 move_right(void)
 {
-	vel.val[0] += 3.0f * cosf(cam.angle_y);
-	vel.val[2] += -3.0f * cosf(M_PI_2 - cam.angle_y);
+	vel.val[0] += 0.5f * cosf(cam.angle_y);
+	vel.val[2] += -0.5f * cosf(M_PI_2 - cam.angle_y);
 }
 
 void
 move_up(void)
 {
-	vel.val[1] += 3.0f;
+	vel.val[1] += 0.5f;
 }
 
 void
 move_down(void)
 {
-	vel.val[1] -= 3.0f;
+	vel.val[1] -= 0.5f;
 }
 
 void
@@ -302,7 +302,7 @@ void
 update(void)
 {
 	normalize_vector(vel);
-	vector_multiply_scalar(vel, 3.0f);
+	vector_multiply_scalar(vel, 0.5f);
 
 	cam.x += vel.val[0] * (float)delta_time;
 	cam.y += vel.val[1] * (float)delta_time;
