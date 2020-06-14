@@ -337,6 +337,8 @@ det(Matrix mat)
 
 	destroy_dynamic_matrix(tmp1);
 	destroy_dynamic_matrix(tmp2);
+
+	return res;
 }
 
 float

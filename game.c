@@ -43,7 +43,7 @@ static struct Camera cam = {
 	.angle_x = 0.0f, .angle_y = 0.0f, .angle_z = 0.0f,
 	.fovx = 1.570796f,
 	.proj = PERSP,
-	.n = 0.05f, .f = 10.0f
+	.n = 0.05f, .f = 100.0f
 };
 
 static const float vertices[] = {
@@ -61,69 +61,69 @@ static const float vertices[] = {
 	-0.5f, -0.5f, -0.5f, 0.5f, 0.5f, 0.5f,
 
 	/* floor */
-	-1.5f, -0.5001f, -1.5f, 0.9f, 0.9f, 0.9f,
-	 1.5f, -0.5001f, -1.5f, 0.4f, 0.9f, 0.9f,
-	 1.5f, -0.5001f,  1.5f, 0.4f, 0.4f, 0.9f,
-	-1.5f, -0.5001f,  1.5f, 0.9f, 0.4f, 0.9f,
+	-1.0f, -0.5001f, -1.0f, 1.0f, 1.0f, 1.0f,
+	 1.0f, -0.5001f, -1.0f, 0.5f, 1.0f, 1.0f,
+	 1.0f, -0.5001f,  1.0f, 0.5f, 0.5f, 1.0f,
+	-1.0f, -0.5001f,  1.0f, 1.0f, 0.5f, 1.0f,
 };
 
 //static const float vertices[] = {
 ///*      pos                  color             texcoords */
 //	/* front */
-//	-0.5f,  0.5f,  0.5f, 1.0f, 0.5f, 1.0f, //0.0f, 1.0f,
-//	 0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, //1.0f, 1.0f,
-//	 0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 0.5f, //1.0f, 0.0f,
-//	 0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 0.5f, //1.0f, 0.0f,
-//	-0.5f, -0.5f,  0.5f, 1.0f, 0.5f, 0.5f, //0.0f, 0.0f,
-//	-0.5f,  0.5f,  0.5f, 1.0f, 0.5f, 1.0f, //0.0f, 1.0f,
+//	-0.5f,  0.5f,  0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
+//	 0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+//	 0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
+//	 0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
+//	-0.5f, -0.5f,  0.5f, 1.0f, 0.5f, 0.5f, 0.0f, 0.0f,
+//	-0.5f,  0.5f,  0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
 //
 //	/* back */
-//	 0.5f,  0.5f, -0.5f, 1.0f, 0.5f, 1.0f, //0.0f, 1.0f,
-//	-0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, //1.0f, 1.0f,
-//	-0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.5f, //1.0f, 0.0f,
-//	-0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.5f, //1.0f, 0.0f,
-//	 0.5f, -0.5f, -0.5f, 1.0f, 0.5f, 0.5f, //0.0f, 0.0f,
-//	 0.5f,  0.5f, -0.5f, 1.0f, 0.5f, 1.0f, //0.0f, 1.0f,
+//	 0.5f,  0.5f, -0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
+//	-0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+//	-0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
+//	-0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
+//	 0.5f, -0.5f, -0.5f, 1.0f, 0.5f, 0.5f, 0.0f, 0.0f,
+//	 0.5f,  0.5f, -0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
 //
 //	/* left */
-//	-0.5f,  0.5f, -0.5f, 1.0f, 0.5f, 1.0f, //0.0f, 1.0f,
-//	-0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, //1.0f, 1.0f,
-//	-0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 0.5f, //1.0f, 0.0f,
-//	-0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 0.5f, //1.0f, 0.0f,
-//	-0.5f, -0.5f, -0.5f, 1.0f, 0.5f, 0.5f, //0.0f, 0.0f,
-//	-0.5f,  0.5f, -0.5f, 1.0f, 0.5f, 1.0f, //0.0f, 1.0f,
+//	-0.5f,  0.5f, -0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
+//	-0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+//	-0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
+//	-0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
+//	-0.5f, -0.5f, -0.5f, 1.0f, 0.5f, 0.5f, 0.0f, 0.0f,
+//	-0.5f,  0.5f, -0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
 //
 //	/* right */
-//	 0.5f,  0.5f,  0.5f, 1.0f, 0.5f, 1.0f, //0.0f, 1.0f,
-//	 0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, //1.0f, 1.0f,
-//	 0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.5f, //1.0f, 0.0f,
-//	 0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.5f, //1.0f, 0.0f,
-//	 0.5f, -0.5f,  0.5f, 1.0f, 0.5f, 0.5f, //0.0f, 0.0f,
-//	 0.5f,  0.5f,  0.5f, 1.0f, 0.5f, 1.0f, //0.0f, 1.0f,
+//	 0.5f,  0.5f,  0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
+//	 0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+//	 0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
+//	 0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
+//	 0.5f, -0.5f,  0.5f, 1.0f, 0.5f, 0.5f, 0.0f, 0.0f,
+//	 0.5f,  0.5f,  0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
 //
 //	 /* top */
-//	-0.5f,  0.5f, -0.5f, 1.0f, 0.5f, 1.0f, //0.0f, 1.0f,
-//	 0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, //1.0f, 1.0f,
-//	 0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 0.5f, //1.0f, 0.0f,
-//	 0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 0.5f, //1.0f, 0.0f,
-//	-0.5f,  0.5f,  0.5f, 1.0f, 0.5f, 0.5f, //0.0f, 0.0f,
-//	-0.5f,  0.5f, -0.5f, 1.0f, 0.5f, 1.0f, //0.0f, 1.0f,
+//	-0.5f,  0.5f, -0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
+//	 0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+//	 0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
+//	 0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
+//	-0.5f,  0.5f,  0.5f, 1.0f, 0.5f, 0.5f, 0.0f, 0.0f,
+//	-0.5f,  0.5f, -0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
 // 	
 //	/* bottom */
-//	-0.5f, -0.5f,  0.5f, 1.0f, 0.5f, 1.0f, //0.0f, 1.0f,
-//	 0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, //1.0f, 1.0f,
-//	 0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.5f, //1.0f, 0.0f,
-//	 0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.5f, //1.0f, 0.0f,
-//	-0.5f, -0.5f, -0.5f, 1.0f, 0.5f, 0.5f, //0.0f, 0.0f,
-//	-0.5f, -0.5f,  0.5f, 1.0f, 0.5f, 1.0f, //0.0f, 1.0f,
+//	-0.5f, -0.5f,  0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
+//	 0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+//	 0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
+//	 0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
+//	-0.5f, -0.5f, -0.5f, 1.0f, 0.5f, 0.5f, 0.0f, 0.0f,
+//	-0.5f, -0.5f,  0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
 //
 //	/* floor */
-//	-1.5f, -0.5001f, -1.5f, 2.0f, 0.0f, 1.0f, //0.0f, 0.0f,
-//	 1.5f, -0.5001f, -1.5f, 1.0f, 0.0f, 1.0f, //0.0f, 0.0f,
-//	 1.5f, -0.5001f,  1.5f, 0.0f, 1.0f, 2.0f, //0.0f, 0.0f,
-//	 1.5f, -0.5001f,  1.5f, 0.0f, 1.0f, 2.0f, //0.0f, 0.0f,
-//	-1.5f, -0.5001f,  1.5f, 0.0f, 1.0f, 1.0f, //0.0f, 0.0f,
-//	-1.5f, -0.5001f, -1.5f, 2.0f, 0.0f, 1.0f, //0.0f, 0.0f,
+//	-1.5f, -0.5001f, -1.5f, 2.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+//	 1.5f, -0.5001f, -1.5f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+//	 1.5f, -0.5001f,  1.5f, 0.0f, 1.0f, 2.0f, 0.0f, 0.0f,
+//	 1.5f, -0.5001f,  1.5f, 0.0f, 1.0f, 2.0f, 0.0f, 0.0f,
+//	-1.5f, -0.5001f,  1.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f,
+//	-1.5f, -0.5001f, -1.5f, 2.0f, 0.0f, 1.0f, 0.0f, 0.0f,
 //};
 
 static const GLuint indices[] = {
@@ -143,41 +143,41 @@ Matrix cube_rot, cube_move;
 void
 move_foreward(void)
 {
-	vel.val[0] += -0.5f * cosf(M_PI_2 - cam.angle_y);
-	vel.val[2] += -0.5f * cosf(cam.angle_y);
+	vel.val[0] += -1.0f * cosf(M_PI_2 - cam.angle_y);
+	vel.val[2] += -1.0f * cosf(cam.angle_y);
 }
 
 void
 move_backward(void)
 {
-	vel.val[0] += 0.5f * cosf(M_PI_2 - cam.angle_y);
-	vel.val[2] += 0.5f * cosf(cam.angle_y);
+	vel.val[0] += 1.0f * cosf(M_PI_2 - cam.angle_y);
+	vel.val[2] += 1.0f * cosf(cam.angle_y);
 }
 
 void
 move_left(void)
 {
-	vel.val[0] += -0.5f * cosf(cam.angle_y);
-	vel.val[2] += 0.5f * cosf(M_PI_2 - cam.angle_y);
+	vel.val[0] += -1.0f * cosf(cam.angle_y);
+	vel.val[2] += 1.0f * cosf(M_PI_2 - cam.angle_y);
 }
 
 void
 move_right(void)
 {
-	vel.val[0] += 0.5f * cosf(cam.angle_y);
-	vel.val[2] += -0.5f * cosf(M_PI_2 - cam.angle_y);
+	vel.val[0] += 1.0f * cosf(cam.angle_y);
+	vel.val[2] += -1.0f * cosf(M_PI_2 - cam.angle_y);
 }
 
 void
 move_up(void)
 {
-	vel.val[1] += 0.5f;
+	vel.val[1] += 1.0f;
 }
 
 void
 move_down(void)
 {
-	vel.val[1] -= 0.5f;
+	vel.val[1] -= 1.0f;
 }
 
 void
@@ -200,7 +200,6 @@ mouse_move(struct MouseMove m)
 void
 quit(void)
 {
-	printf("wtf okbuddy\n");
 	exit_game(EXIT_SUCCESS);
 }
 
@@ -230,7 +229,8 @@ setup(void)
 
 	glGenBuffers(1, &ib);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
+	             GL_STATIC_DRAW);
 
 	if (!load_tga_file(&test_image, "res/textures/test.tga"))
 		die("error loading tga file: %s\n", img_strerror(img_err));
@@ -284,7 +284,7 @@ void
 update(void)
 {
 	normalize_vector(vel);
-	vector_multiply_scalar(vel, 0.5f);
+	vector_multiply_scalar(vel, 2.0f);
 
 	cam.x += vel.val[0] * (float)delta_time;
 	cam.y += vel.val[1] * (float)delta_time;
@@ -331,7 +331,8 @@ render(void)
 	proj_uni = glGetUniformLocation(shader_program, "proj");
 	glUniformMatrix4fv(proj_uni, 1, GL_FALSE, projt.val);
 
-	override_color_uni = glGetUniformLocation(shader_program, "override_color");
+	override_color_uni =
+		glGetUniformLocation(shader_program, "override_color");
 	glUniform3f(override_color_uni, 1.0f, 1.0f, 1.0f);
 
 	glClearColor(0.0, 0.7, 0.7, 1.0);
@@ -365,6 +366,7 @@ render(void)
 		/* actually draw floor */
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT,
 		               (GLvoid *)(36 * sizeof(uint)));
+		//glDrawArrays(GL_TRIANGLES, 36, 6);
 
 		/* draw cube reflection */
 		glStencilFunc(GL_EQUAL, 1, 0xff); /* pass if equal to 1 */
@@ -385,7 +387,9 @@ render(void)
 		glDisable(GL_STENCIL_TEST);
 	} else {
 		glUniformMatrix4fv(model_uni, 1, GL_FALSE, i.val);
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (GLvoid *)(36 * sizeof(uint)));
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT,
+		               (GLvoid *)(36 * sizeof(uint)));
+		//glDrawArrays(GL_TRIANGLES, 36, 6);
 	}
 
 	glXSwapBuffers(display, window);
