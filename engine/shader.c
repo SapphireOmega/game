@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <string.h>
 
+#include "engine.h"
 #include "util.h"
 
 /* structs */
@@ -27,7 +28,7 @@ parse_shader(const char *file, char **vs_dst, char **fs_dst)
 
 	if (!(fd = fopen(file, "r"))) {
 		fprintf(stderr, "error opening file\n");
-		exit(EXIT_FAILURE);
+		exit_game(EXIT_FAILURE);
 	}
 
 	fseek(fd, 0, SEEK_END);
@@ -37,12 +38,12 @@ parse_shader(const char *file, char **vs_dst, char **fs_dst)
 	*fs_dst = (char *)malloc(sizeof(char) * len);
 	if (!vs_dst) {
 		fprintf(stderr, "error allocating vertex shader buffer\n");
-		exit(EXIT_FAILURE);
+		exit_game(EXIT_FAILURE);
 	}
 
 	if (!fs_dst) {
 		fprintf(stderr, "error allocating fragment shader buffer\n");
-		exit(EXIT_FAILURE);
+		exit_game(EXIT_FAILURE);
 	}
 
 	*vs_dst[0] = '\0';
@@ -53,7 +54,7 @@ parse_shader(const char *file, char **vs_dst, char **fs_dst)
 		if (ferror(fd)) {
 			fprintf(stderr, "error reading from %s: %s\n",
 			        file, strerror(errno));
-			exit(EXIT_FAILURE);
+			exit_game(EXIT_FAILURE);
 		}
 
 		if (feof(fd))
@@ -70,7 +71,7 @@ parse_shader(const char *file, char **vs_dst, char **fs_dst)
 			} else {
 				fprintf(stderr, "error in %s\n", file);
 				fprintf(stderr, "(line %d): %s", linenum, line);
-				exit(EXIT_FAILURE);
+				exit_game(EXIT_FAILURE);
 			}
 		} else {
 			if (t == VERTEX)
@@ -249,9 +250,9 @@ va_add(VertexArray *va, const VertexBufferLayout *layout)
 }
 
 void
-va_use_shader(VertexArray *va, unsigned int shader)
+va_use_shader(VertexArray *va, uint shader)
 {
-	unsigned int i, j;
+	uint i, j;
 
 	GLenum e;
 
@@ -266,6 +267,7 @@ va_use_shader(VertexArray *va, unsigned int shader)
 			printf("warning: layout not using max element count\n");
 
 		glBindBuffer(GL_ARRAY_BUFFER, layout->vb->id);
+		glUseProgram(shader);
 
 		for (j = 0; j < layout->count; j++) {
 			const struct BufferElement *elem;

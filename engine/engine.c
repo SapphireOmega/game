@@ -2,15 +2,13 @@
 
 #include <stdlib.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 #include "engine_time.h"
 #include "event.h"
 #include "state.h"
 #include "util.h"
 #include "window.h"
-
-/* globals */
-static bool running = true;
 
 /* functions */
 static void
@@ -38,7 +36,7 @@ engine_run(void)
 	if (current_state.setup)
 		current_state.setup();
 
-	while (running) {
+	for (;;) {
 		update_delta_time();
 		handle_events();
 		if (current_state.update)
@@ -47,15 +45,16 @@ engine_run(void)
 			current_state.render();
 	}
 
-	if (current_state.cleanup)
-		current_state.cleanup();
+	//if (current_state.cleanup)
+	//	current_state.cleanup();
 }
 
 void
 exit_game(int status)
 {
+	printf("exiting game\n");
 	if (current_state.cleanup)
 		current_state.cleanup();
 	engine_cleanup();
-	running = false;
+	exit(status);
 }

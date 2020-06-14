@@ -30,11 +30,12 @@
 #include <engine/util.h>
 #include <engine/window.h>
 
-/* globals */
+/* variables */
 static GLuint shader_program;
 static VertexBuffer *vb;
 static VertexBufferLayout *vb_layout;
 static VertexArray *va;
+static GLuint ib;
 static struct TGA_File test_image;
 static GLuint tex;
 static struct Camera cam = {
@@ -42,103 +43,98 @@ static struct Camera cam = {
 	.angle_x = 0.0f, .angle_y = 0.0f, .angle_z = 0.0f,
 	.fovx = 1.570796f,
 	.proj = PERSP,
-	.n = 0.2f, .f = 10.0f
+	.n = 0.05f, .f = 10.0f
+};
+
+static const float vertices[] = {
+/*      pos                  color            */
+	/* front */
+	-0.5f,  0.5f,  0.5f, 1.0f, 0.5f, 1.0f,
+	 0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f,
+	 0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 0.5f,
+	-0.5f, -0.5f,  0.5f, 1.0f, 0.5f, 0.5f,
+
+	/* back */
+	-0.5f,  0.5f, -0.5f, 0.5f, 0.5f, 1.0f,
+	 0.5f,  0.5f, -0.5f, 0.5f, 1.0f, 1.0f,
+	 0.5f, -0.5f, -0.5f, 0.5f, 1.0f, 0.5f,
+	-0.5f, -0.5f, -0.5f, 0.5f, 0.5f, 0.5f,
+
+	/* floor */
+	-1.5f, -0.5001f, -1.5f, 0.9f, 0.9f, 0.9f,
+	 1.5f, -0.5001f, -1.5f, 0.4f, 0.9f, 0.9f,
+	 1.5f, -0.5001f,  1.5f, 0.4f, 0.4f, 0.9f,
+	-1.5f, -0.5001f,  1.5f, 0.9f, 0.4f, 0.9f,
 };
 
 //static const float vertices[] = {
 ///*      pos                  color             texcoords */
-//	-0.5f,  0.5f,  0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
-//	 0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-//	 0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
-//	-0.5f, -0.5f,  0.5f, 1.0f, 0.5f, 0.5f, 0.0f, 0.0f,
-//
-//	-0.5f,  0.5f, -0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
-//	 0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-//	 0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
-//	-0.5f, -0.5f, -0.5f, 1.0f, 0.5f, 0.5f, 0.0f, 0.0f,
-//};
-
-static const float vertices[] = {
-/*      pos                  color             texcoords */
-	/* front */
-	-0.5f,  0.5f,  0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
-	 0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-	 0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
-	 0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
-	-0.5f, -0.5f,  0.5f, 1.0f, 0.5f, 0.5f, 0.0f, 0.0f,
-	-0.5f,  0.5f,  0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
-
-	/* back */
-	 0.5f,  0.5f, -0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
-	-0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-	-0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
-	-0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
-	 0.5f, -0.5f, -0.5f, 1.0f, 0.5f, 0.5f, 0.0f, 0.0f,
-	 0.5f,  0.5f, -0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
-
-	/* left */
-	-0.5f,  0.5f, -0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
-	-0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-	-0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
-	-0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
-	-0.5f, -0.5f, -0.5f, 1.0f, 0.5f, 0.5f, 0.0f, 0.0f,
-	-0.5f,  0.5f, -0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
-
-	/* right */
-	 0.5f,  0.5f,  0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
-	 0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-	 0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
-	 0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
-	 0.5f, -0.5f,  0.5f, 1.0f, 0.5f, 0.5f, 0.0f, 0.0f,
-	 0.5f,  0.5f,  0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
-
-	 /* top */
-	-0.5f,  0.5f, -0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
-	 0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-	 0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
-	 0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
-	-0.5f,  0.5f,  0.5f, 1.0f, 0.5f, 0.5f, 0.0f, 0.0f,
-	-0.5f,  0.5f, -0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
- 	
-	/* bottom */
-	-0.5f, -0.5f,  0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
-	 0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-	 0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
-	 0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
-	-0.5f, -0.5f, -0.5f, 1.0f, 0.5f, 0.5f, 0.0f, 0.0f,
-	-0.5f, -0.5f,  0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
-
-	/* floor */
-	-1.5f, -0.5001f, -1.5f, 2.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-	 1.5f, -0.5001f, -1.5f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-	 1.5f, -0.5001f,  1.5f, 0.0f, 1.0f, 2.0f, 0.0f, 0.0f,
-	 1.5f, -0.5001f,  1.5f, 0.0f, 1.0f, 2.0f, 0.0f, 0.0f,
-	-1.5f, -0.5001f,  1.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f,
-	-1.5f, -0.5001f, -1.5f, 2.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-};
-
-// 5, 4, 7, 7, 6, 5
-
-//static const GLuint elements[] = {
 //	/* front */
-//	0, 1, 2,
-//	2, 3, 0,
+//	-0.5f,  0.5f,  0.5f, 1.0f, 0.5f, 1.0f, //0.0f, 1.0f,
+//	 0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, //1.0f, 1.0f,
+//	 0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 0.5f, //1.0f, 0.0f,
+//	 0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 0.5f, //1.0f, 0.0f,
+//	-0.5f, -0.5f,  0.5f, 1.0f, 0.5f, 0.5f, //0.0f, 0.0f,
+//	-0.5f,  0.5f,  0.5f, 1.0f, 0.5f, 1.0f, //0.0f, 1.0f,
+//
 //	/* back */
-//	4, 5, 6,
-//	6, 7, 4,
+//	 0.5f,  0.5f, -0.5f, 1.0f, 0.5f, 1.0f, //0.0f, 1.0f,
+//	-0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, //1.0f, 1.0f,
+//	-0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.5f, //1.0f, 0.0f,
+//	-0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.5f, //1.0f, 0.0f,
+//	 0.5f, -0.5f, -0.5f, 1.0f, 0.5f, 0.5f, //0.0f, 0.0f,
+//	 0.5f,  0.5f, -0.5f, 1.0f, 0.5f, 1.0f, //0.0f, 1.0f,
+//
 //	/* left */
-//	4, 0, 3,
-//	3, 7, 4,
+//	-0.5f,  0.5f, -0.5f, 1.0f, 0.5f, 1.0f, //0.0f, 1.0f,
+//	-0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, //1.0f, 1.0f,
+//	-0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 0.5f, //1.0f, 0.0f,
+//	-0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 0.5f, //1.0f, 0.0f,
+//	-0.5f, -0.5f, -0.5f, 1.0f, 0.5f, 0.5f, //0.0f, 0.0f,
+//	-0.5f,  0.5f, -0.5f, 1.0f, 0.5f, 1.0f, //0.0f, 1.0f,
+//
 //	/* right */
-//	1, 5, 6,
-//	6, 2, 1,
-//	/* top */
-//	4, 5, 1,
-//	1, 0, 4,
+//	 0.5f,  0.5f,  0.5f, 1.0f, 0.5f, 1.0f, //0.0f, 1.0f,
+//	 0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, //1.0f, 1.0f,
+//	 0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.5f, //1.0f, 0.0f,
+//	 0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.5f, //1.0f, 0.0f,
+//	 0.5f, -0.5f,  0.5f, 1.0f, 0.5f, 0.5f, //0.0f, 0.0f,
+//	 0.5f,  0.5f,  0.5f, 1.0f, 0.5f, 1.0f, //0.0f, 1.0f,
+//
+//	 /* top */
+//	-0.5f,  0.5f, -0.5f, 1.0f, 0.5f, 1.0f, //0.0f, 1.0f,
+//	 0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, //1.0f, 1.0f,
+//	 0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 0.5f, //1.0f, 0.0f,
+//	 0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 0.5f, //1.0f, 0.0f,
+//	-0.5f,  0.5f,  0.5f, 1.0f, 0.5f, 0.5f, //0.0f, 0.0f,
+//	-0.5f,  0.5f, -0.5f, 1.0f, 0.5f, 1.0f, //0.0f, 1.0f,
+// 	
 //	/* bottom */
-//	3, 2, 6,
-//	6, 7, 3
+//	-0.5f, -0.5f,  0.5f, 1.0f, 0.5f, 1.0f, //0.0f, 1.0f,
+//	 0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, //1.0f, 1.0f,
+//	 0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.5f, //1.0f, 0.0f,
+//	 0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.5f, //1.0f, 0.0f,
+//	-0.5f, -0.5f, -0.5f, 1.0f, 0.5f, 0.5f, //0.0f, 0.0f,
+//	-0.5f, -0.5f,  0.5f, 1.0f, 0.5f, 1.0f, //0.0f, 1.0f,
+//
+//	/* floor */
+//	-1.5f, -0.5001f, -1.5f, 2.0f, 0.0f, 1.0f, //0.0f, 0.0f,
+//	 1.5f, -0.5001f, -1.5f, 1.0f, 0.0f, 1.0f, //0.0f, 0.0f,
+//	 1.5f, -0.5001f,  1.5f, 0.0f, 1.0f, 2.0f, //0.0f, 0.0f,
+//	 1.5f, -0.5001f,  1.5f, 0.0f, 1.0f, 2.0f, //0.0f, 0.0f,
+//	-1.5f, -0.5001f,  1.5f, 0.0f, 1.0f, 1.0f, //0.0f, 0.0f,
+//	-1.5f, -0.5001f, -1.5f, 2.0f, 0.0f, 1.0f, //0.0f, 0.0f,
 //};
+
+static const GLuint indices[] = {
+	0, 1, 2, 2, 3, 0,
+	4, 5, 6, 6, 7, 4,
+	4, 0, 3, 3, 7, 4,
+	1, 5, 6, 6, 2, 1,
+	4, 5, 1, 1, 0, 4,
+	3, 2, 6, 6, 7, 3,
+	8, 9, 10, 10, 11, 8
+};
 
 Vector vel, cube_rot_axis;
 Matrix cube_rot, cube_move;
@@ -201,29 +197,12 @@ mouse_move(struct MouseMove m)
 	rot((float)m.x * -0.05f, (float)m.y * -0.05f);
 }
 
-//void
-//left(void)
-//{
-//	rot(10.0f, 0.0f);
-//}
-//
-//void
-//right(void)
-//{
-//	rot(-10.0f, 0.0f);
-//}
-//
-//void
-//up(void)
-//{
-//	rot(0.0f, 10.0f);
-//}
-//
-//void
-//down(void)
-//{
-//	rot(0.0f, -10.0f);
-//}
+void
+quit(void)
+{
+	printf("wtf okbuddy\n");
+	exit_game(EXIT_SUCCESS);
+}
 
 void
 setup(void)
@@ -232,25 +211,26 @@ setup(void)
 	Vector cube_move_axis;
 
 	engine_create_window(800, 600);
-	//XAutoRepeatOff(display);
 
 	parse_shader("res/shaders/shader.glsl", &vs_src, &fs_src);
 	shader_program = create_shader_program(vs_src, fs_src);
-	glUseProgram(shader_program);
 	free(vs_src);
 	free(fs_src);
 
 	va = create_va(1);
 	vb = create_vb(vertices, sizeof(vertices), GL_FLOAT, sizeof(float));
-	vb_layout = create_vb_layout(vb, 3);
 
+	vb_layout = create_vb_layout(vb, 2);
 	vb_layout_add(vb_layout, "position", 3);
 	vb_layout_add(vb_layout, "vcolor", 3);
-	vb_layout_add(vb_layout, "vtexcoord", 2);
 
 	va_add(va, vb_layout);
 
 	va_use_shader(va, shader_program);
+
+	glGenBuffers(1, &ib);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 	if (!load_tga_file(&test_image, "res/textures/test.tga"))
 		die("error loading tga file: %s\n", img_strerror(img_err));
@@ -277,6 +257,8 @@ setup(void)
 	if (!add_key(&err, XK_space, NULL, NULL, move_up))
 		die("error adding key: %s", err);
 	if (!add_key(&err, XK_Shift_L, NULL, NULL, move_down))
+		die("error adding key: %s", err);
+	if (!add_key(&err, XK_Escape, NULL, NULL, quit))
 		die("error adding key: %s", err);
 	mouse_handler.move = mouse_move;
 
@@ -356,7 +338,8 @@ render(void)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	/* draw cube */
-	glDrawArrays(GL_TRIANGLES, 0, 36);
+	//glDrawArrays(GL_TRIANGLES, 0, 36);
+	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
 	/* only draw reflection when you can actually see it, in other words,
 	 * only if the camera is above the plane
@@ -379,7 +362,9 @@ render(void)
 		glDepthMask(GL_FALSE); /* don't write to depth buffer */
 		glClear(GL_STENCIL_BUFFER_BIT); /* clear stencil buffer */
 
-		glDrawArrays(GL_TRIANGLES, 36, 6); /* actually draw floor */
+		/* actually draw floor */
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT,
+		               (GLvoid *)(36 * sizeof(uint)));
 
 		/* draw cube reflection */
 		glStencilFunc(GL_EQUAL, 1, 0xff); /* pass if equal to 1 */
@@ -394,13 +379,13 @@ render(void)
 		transpose(tmp_model); /* again back to column-major order */
 
 		glUniformMatrix4fv(model_uni, 1, GL_FALSE, tmp_model.val);
-		glUniform3f(override_color_uni, 0.6f, 0.8f, 1.0f); /* darken */
-		glDrawArrays(GL_TRIANGLES, 0, 36);
+		glUniform3f(override_color_uni, 0.5f, 0.6f, 1.0f); /* darken */
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 		glUniform3f(override_color_uni, 1.0f, 1.0f, 1.0f);
 		glDisable(GL_STENCIL_TEST);
 	} else {
 		glUniformMatrix4fv(model_uni, 1, GL_FALSE, i.val);
-		glDrawArrays(GL_TRIANGLES, 36, 6);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (GLvoid *)(36 * sizeof(uint)));
 	}
 
 	glXSwapBuffers(display, window);

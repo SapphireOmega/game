@@ -48,7 +48,7 @@ void vb_layout_add(VertexBufferLayout *layout, const char *name,
 VertexArray *create_va(unsigned int init_count);
 void destroy_va(VertexArray *va);
 void va_add(VertexArray *va, const VertexBufferLayout *layout);
-void va_use_shader(VertexArray *va, unsigned int shader); /* also binds va */
+void va_use_shader(VertexArray *va, uint shader); /* also binds va */
 void va_bind(VertexArray *va);
 void va_unbind(void);
 

@@ -33,9 +33,9 @@ struct MouseHandler {
 };
 
 /* globals */
-struct KeyHandler key_handler;
-struct Mouse mouse;
-struct MouseHandler mouse_handler;
+extern struct KeyHandler key_handler;
+extern struct Mouse mouse;
+extern struct MouseHandler mouse_handler;
 
 /* functions */
 bool init_keys(char **err);

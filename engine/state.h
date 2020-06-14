@@ -12,7 +12,7 @@ struct GameState {
 };
 
 /* globals */
-struct GameState current_state;
+extern struct GameState current_state;
 
 /* functions */
 void engine_set_current_state(struct GameState state);

@@ -5,6 +5,7 @@
 void init_time(void);
 void update_delta_time(void);
 
-double delta_time;
+/* globals */
+extern double delta_time;
 
 #endif /* ENGINE_TIME_H */

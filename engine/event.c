@@ -15,7 +15,7 @@ static void key_press(XEvent *e);
 static void key_release(XEvent *e);
 static void mouse_motion(XEvent *e);
 
-/* globals */
+/* variables */
 static void (*handler[LASTEvent])(XEvent *e) = {
 	[Expose] = expose,
 	[ClientMessage] = client_message,
@@ -23,6 +23,10 @@ static void (*handler[LASTEvent])(XEvent *e) = {
 	[KeyRelease] = key_release,
 	[MotionNotify] = mouse_motion,
 };
+
+struct KeyHandler key_handler;
+struct Mouse mouse;
+struct MouseHandler mouse_handler;
 
 /* functions */
 static void

@@ -4,8 +4,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-/* globals */
+/* variables */
 static struct timespec start, end;
+
+double delta_time;
 
 /* functions */
 void

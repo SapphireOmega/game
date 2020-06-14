@@ -19,9 +19,9 @@ typedef GLXContext (*glXCreateContextAttribsARBProc)
 void engine_create_window(unsigned int w, unsigned int h);
 void engine_destroy_window(void);
 
-/* variables */
-Display *display;
-XWindowAttributes window_attribs;
-Window window;
+/* globals */
+extern Display *display;
+extern XWindowAttributes window_attribs;
+extern Window window;
 
 #endif /* WINDOW_H */

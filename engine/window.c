@@ -7,13 +7,17 @@
 
 #include "util.h"
 
-/* globals */
+/* variables */
 static int screen_id;
 static Window root_window;
 static Colormap colormap;
 static Atom delete_window;
 static bool context_error = false;
 static GLXContext render_context;
+
+Display *display;
+XWindowAttributes window_attribs;
+Window window;
 
 /* functions */
 static void

@@ -36,4 +36,5 @@ uniform sampler2D tex;
 void main()
 {
 	out_color = 0.5 * texture(tex, ftexcoord) + 0.5 * vec4(fcolor, 1.0);
+	//out_color = vec4(fcolor, 1.0);
 }
