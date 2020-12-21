@@ -227,17 +227,9 @@ void inverse(uint mat_size, float res[mat_size][mat_size], float mat[mat_size][m
 	float adjugate[mat_size][mat_size];
 
 	matrix_of_minors(mat_size, cofactors, mat);
-	//printf("minors\n");
-	//print_matrix(cofactors);
 	apply_checker_pattern(mat_size, mat_size, cofactors, cofactors);
-	//printf("cofactors\n");
-	//print_matrix(cofactors);
 	transpose(mat_size, mat_size, adjugate, cofactors);
-	//printf("adjucate\n");
-	//print_matrix(adjucate);
 	scalar_matrix_product(mat_size, mat_size, res, 1.0f / det_from_cofactors(mat_size, mat, cofactors), adjugate);
-	//printf("res\n");
-	//print_matrix(res);
 }
 
 void add_row(
