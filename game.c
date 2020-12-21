@@ -199,7 +199,6 @@ void quit(void)
 void setup(void)
 {
 	char *vs_src, *fs_src, *err;
-	//Vector cube_move_axis;
 
 	engine_create_window(800, 600);
 
