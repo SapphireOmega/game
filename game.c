@@ -1,14 +1,16 @@
 /* TODO:
- * clean up vertecies and matrices
+ * load obj
+ * lights
  * error checking in the functions instead of by the program
  * fix the X connection broken message
- * use shorthand types and sort out opengl datatypes vs regular c
  * shader abstraction
  * texture abstraction
  * mipmaps
  * opengl error logging
  * gamestate stack
  * collision
+ * reflection
+ * materials
  * sound
  */
 
@@ -16,6 +18,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <GL/glew.h>
 
@@ -26,7 +29,7 @@
 #include <engine/state.h>
 #include <engine/imgload.h>
 #include <engine/proj.h>
-#include <engine/trans.h>
+#include <engine/vec.h>
 #include <engine/util.h>
 #include <engine/window.h>
 
@@ -136,52 +139,44 @@ static const GLuint indices[] = {
 	8, 9, 10, 10, 11, 8
 };
 
-Vector vel, cube_rot_axis;
-Matrix cube_rot, cube_move;
+float vel[3], cube_rot_axis[3];
+float cube_rot[4][4], cube_init_transform[4][4];
 
-/* functions */
-void
-move_foreward(void)
+void move_foreward(void)
 {
-	vel.val[0] += -1.0f * cosf(M_PI_2 - cam.angle_y);
-	vel.val[2] += -1.0f * cosf(cam.angle_y);
+	vel[0] += -1.0f * cosf(M_PI_2 - cam.angle_y);
+	vel[2] += -1.0f * cosf(cam.angle_y);
 }
 
-void
-move_backward(void)
+void move_backward(void)
 {
-	vel.val[0] += 1.0f * cosf(M_PI_2 - cam.angle_y);
-	vel.val[2] += 1.0f * cosf(cam.angle_y);
+	vel[0] += 1.0f * cosf(M_PI_2 - cam.angle_y);
+	vel[2] += 1.0f * cosf(cam.angle_y);
 }
 
-void
-move_left(void)
+void move_left(void)
 {
-	vel.val[0] += -1.0f * cosf(cam.angle_y);
-	vel.val[2] += 1.0f * cosf(M_PI_2 - cam.angle_y);
+	vel[0] += -1.0f * cosf(cam.angle_y);
+	vel[2] += 1.0f * cosf(M_PI_2 - cam.angle_y);
 }
 
-void
-move_right(void)
+void move_right(void)
 {
-	vel.val[0] += 1.0f * cosf(cam.angle_y);
-	vel.val[2] += -1.0f * cosf(M_PI_2 - cam.angle_y);
+	vel[0] += 1.0f * cosf(cam.angle_y);
+	vel[2] += -1.0f * cosf(M_PI_2 - cam.angle_y);
 }
 
-void
-move_up(void)
+void move_up(void)
 {
-	vel.val[1] += 1.0f;
+	vel[1] += 1.0f;
 }
 
-void
-move_down(void)
+void move_down(void)
 {
-	vel.val[1] -= 1.0f;
+	vel[1] -= 1.0f;
 }
 
-void
-rot(float a, float b)
+void rot(float a, float b)
 {
 	cam.angle_y += a * (float)delta_time;
 	cam.angle_x += b * (float)delta_time;
@@ -191,23 +186,20 @@ rot(float a, float b)
 		cam.angle_x = -M_PI / 2.0f;
 }
 
-void
-mouse_move(struct MouseMove m)
+void mouse_move(struct MouseMove m)
 {
 	rot((float)m.x * -0.02f, (float)m.y * -0.02f);
 }
 
-void
-quit(void)
+void quit(void)
 {
 	exit_game(EXIT_SUCCESS);
 }
 
-void
-setup(void)
+void setup(void)
 {
 	char *vs_src, *fs_src, *err;
-	Vector cube_move_axis;
+	//Vector cube_move_axis;
 
 	engine_create_window(800, 600);
 
@@ -229,8 +221,7 @@ setup(void)
 
 	glGenBuffers(1, &ib);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
-	             GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 	if (!load_tga_file(&test_image, "res/textures/test.tga"))
 		die("error loading tga file: %s\n", img_strerror(img_err));
@@ -240,10 +231,7 @@ setup(void)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
-	             test_image.width, test_image.height,
-	             0, GL_RGBA, GL_FLOAT, test_image.data);
-
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, test_image.width, test_image.height, 0, GL_RGBA, GL_FLOAT, test_image.data); 
 	glEnable(GL_DEPTH_TEST);
 
 	if (!add_key(&err, XK_w, NULL, NULL, move_foreward))
@@ -262,77 +250,71 @@ setup(void)
 		die("error adding key: %s", err);
 	mouse_handler.move = mouse_move;
 
-	vel = create_dynamic_vector_empty(3);
+	vel[0] = vel[1] = vel[2] = 0.0f;
 
 	current_camera = &cam;
 
-	cube_rot_axis = create_dynamic_vector(3, 0.0f, 1.0f, 0.0f);
-	normalize_vector(cube_rot_axis);
+	cube_rot_axis[0] = 0.0f;
+	cube_rot_axis[1] = 1.0f;
+	cube_rot_axis[2] = 0.0f;
+	normalize(3, cube_rot_axis, cube_rot_axis);
+	identity(4, 4, cube_rot);
 
-	cube_rot = create_dynamic_matrix_empty(4, 4);
-	identity(cube_rot);
+	identity(4, 4, cube_init_transform);
 
-	cube_move = create_dynamic_matrix_empty(4, 4);
-	cube_move_axis = create_vector(3, 1.0f, 0.0f, 1.0f);
-	normalize_vector(cube_move_axis);
-	rotation_3d_homogeneous(cube_move, cube_move_axis, 0.955f);
-	cube_move_axis = create_vector(3, 0.0f, 0.366f, 0.0f);
-	translate(cube_move, cube_move_axis);
+	float cube_init_rot_axis[3] = { 1.0f, 0.0f, 1.0f };
+	normalize(3, cube_init_rot_axis, cube_init_rot_axis);
+	rotation_3d_homogeneous(cube_init_transform, cube_init_rot_axis, M_PI_2 - atanf(1.0f / sqrtf(2.0f)));
+	float cube_init_transl[3] = { 0.0f, (sqrtf(3.0f) - 1.0f) * 0.5f, 0.0f };
+	add_translation(3, cube_init_transform, cube_init_transform, cube_init_transl);
 }
 
-void
-update(void)
+void update(void)
 {
-	normalize_vector(vel);
-	vector_multiply_scalar(vel, 2.0f);
+	normalize(3, vel, vel);
 
-	cam.x += vel.val[0] * (float)delta_time;
-	cam.y += vel.val[1] * (float)delta_time;
-	cam.z += vel.val[2] * (float)delta_time;
+	cam.x += vel[0] * (float)delta_time;
+	cam.y += vel[1] * (float)delta_time;
+	cam.z += vel[2] * (float)delta_time;
 
-	vel.val[0] = vel.val[1] = vel.val[2] = 0.0f;
+	vel[0] = vel[1] = vel[2] = 0.0f;
 
-	rotate_3d_homogeneous(cube_rot, cube_rot_axis, 1.0f * delta_time);
+	float d_cube_rot[4][4];
+	float tmp[4][4];
+
+	rotation_3d_homogeneous(d_cube_rot, cube_rot_axis, 1.0f * delta_time);
+	matrix_matrix_product(4, 4, 4, tmp, d_cube_rot, cube_rot);
+	memcpy(cube_rot, tmp, 16 * sizeof(float));
 }
 
-void
-render(void)
+void render(void)
 {
-	Matrix proj, model, view, projt, modelt, viewt, i;
+	float proj[4][4], model[4][4], view[4][4], projt[4][4], modelt[4][4], viewt[4][4], i[4][4];
 	GLint proj_uni, model_uni, view_uni, override_color_uni;
 	float aspect;
 
-	i = create_matrix_empty(4, 4);
-	identity(i);
-
-	view = create_matrix_empty(4, 4);
-	proj = create_matrix_empty(4, 4);
-	model = create_matrix_empty(4, 4);
-	viewt = create_matrix_empty(4, 4);
-	projt = create_matrix_empty(4, 4);
-	modelt = create_matrix_empty(4, 4);
+	identity(4, 4, i);
 
 	fps_view(view);
 	aspect = (float)window_attribs.width / (float)window_attribs.height;
 	projection(proj, aspect);
-	matrix_matrix_product(model, cube_rot, cube_move);
+	matrix_matrix_product(4, 4, 4, model, cube_rot, cube_init_transform);
 
 	/* OpenGl uses column-major order (I found out the hard way) */
-	transposed(modelt, model);
-	transposed(viewt, view);
-	transposed(projt, proj);
+	transpose(4, 4, modelt, model);
+	transpose(4, 4, viewt, view);
+	transpose(4, 4, projt, proj);
 
 	model_uni = glGetUniformLocation(shader_program, "model");
-	glUniformMatrix4fv(model_uni, 1, GL_FALSE, modelt.val);
+	glUniformMatrix4fv(model_uni, 1, GL_FALSE, (float *)modelt);
 
 	view_uni = glGetUniformLocation(shader_program, "view");
-	glUniformMatrix4fv(view_uni, 1, GL_FALSE, viewt.val);
+	glUniformMatrix4fv(view_uni, 1, GL_FALSE, (float *)viewt);
 
 	proj_uni = glGetUniformLocation(shader_program, "proj");
-	glUniformMatrix4fv(proj_uni, 1, GL_FALSE, projt.val);
+	glUniformMatrix4fv(proj_uni, 1, GL_FALSE, (float *)projt);
 
-	override_color_uni =
-		glGetUniformLocation(shader_program, "override_color");
+	override_color_uni = glGetUniformLocation(shader_program, "override_color");
 	glUniform3f(override_color_uni, 1.0f, 1.0f, 1.0f);
 
 	glClearColor(0.0, 0.7, 0.7, 1.0);
@@ -346,70 +328,62 @@ render(void)
 	 * only if the camera is above the plane
 	 */
 	if (current_camera->y > -0.5f) { 
-		Vector tmp_vec;
-		Matrix tmp_model;
-
-		tmp_model = create_matrix_empty(4, 4);
-		matrix_copy(tmp_model, model);
-
 		/* enable the stencil test to create a reflection */
 		glEnable(GL_STENCIL_TEST);
 
 		/* draw floor */
-		glUniformMatrix4fv(model_uni, 1, GL_FALSE, i.val);
-		glStencilFunc(GL_ALWAYS, 1, 0xff); /* set any stencil to 1 */
+		glUniformMatrix4fv(model_uni, 1, GL_FALSE, (float *)i);
+		glStencilFunc(GL_ALWAYS, 1, 0xff); // set any stencil to 1
 		glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-		glStencilMask(0xff); /* write to stencil buffer */
-		glDepthMask(GL_FALSE); /* don't write to depth buffer */
-		glClear(GL_STENCIL_BUFFER_BIT); /* clear stencil buffer */
-
-		/* actually draw floor */
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT,
-		               (GLvoid *)(36 * sizeof(uint)));
+		glStencilMask(0xff); // write to stencil buffer
+		glDepthMask(GL_FALSE); // don't write to depth buffer
+		glClear(GL_STENCIL_BUFFER_BIT); // clear stencil buffer
+	
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (GLvoid *)(36 * sizeof(uint)));
 		//glDrawArrays(GL_TRIANGLES, 36, 6);
 
 		/* draw cube reflection */
-		glStencilFunc(GL_EQUAL, 1, 0xff); /* pass if equal to 1 */
-		glStencilMask(0x00); /* don't write to stencil buffer */
-		glDepthMask(GL_TRUE); /* write to depth buffer */
+		glStencilFunc(GL_EQUAL, 1, 0xff); // pass if equal to 1
+		glStencilMask(0x00); // don't write to stencil buffer
+		glDepthMask(GL_TRUE); // write to depth buffer
 
-		/* move cube down and flip */
-		tmp_vec = create_vector(3, 1.0f, -1.0f, 1.0f);
-		scale_homogeneous(tmp_model, tmp_vec);
-		tmp_vec = create_vector(3, 0.0f, -1.0f, 0.0f);
-		translate(tmp_model, tmp_vec);
-		transpose(tmp_model); /* again back to column-major order */
+		float translation_vec[3] = { 0.0f, -0.5 * (sqrtf(3.0f) + 1.0f), 0.0f };
+		float scale_vec[3] = { 1.0f, -1.0f, 1.0f };
 
-		glUniformMatrix4fv(model_uni, 1, GL_FALSE, tmp_model.val);
+		float reflection_scale[4][4];
+		float reflection_model[4][4];
+		float reflection_model_t[4][4];
+
+		scale_homogeneous(3, reflection_scale, scale_vec);
+		matrix_matrix_product(4, 4, 4, reflection_model, reflection_scale, model);
+		add_translation(3, reflection_model, reflection_model, translation_vec);
+		transpose(4, 4, reflection_model_t, reflection_model);
+
+		glUniformMatrix4fv(model_uni, 1, GL_FALSE, (float *)reflection_model_t);
 		glUniform3f(override_color_uni, 0.5f, 0.6f, 1.0f); /* darken */
 		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 		glUniform3f(override_color_uni, 1.0f, 1.0f, 1.0f);
+
+		/* disable stencil test again */
 		glDisable(GL_STENCIL_TEST);
 	} else {
-		glUniformMatrix4fv(model_uni, 1, GL_FALSE, i.val);
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT,
-		               (GLvoid *)(36 * sizeof(uint)));
+		glUniformMatrix4fv(model_uni, 1, GL_FALSE, (float *)i);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (GLvoid *)(36 * sizeof(uint)));
 		//glDrawArrays(GL_TRIANGLES, 36, 6);
 	}
 
 	glXSwapBuffers(display, window);
 }
 
-void
-cleanup(void)
+void cleanup(void)
 {
 	glDeleteProgram(shader_program);
 	destroy_vb(vb);
 	destroy_vb_layout(vb_layout);
 	destroy_va(va);
-	destroy_dynamic_vector(vel);
-	destroy_dynamic_vector(cube_rot_axis);
-	destroy_dynamic_matrix(cube_rot);
-	destroy_dynamic_matrix(cube_move);
 }
 
-int
-main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
 	struct GameState game_state = { setup, update, render, cleanup };
 

@@ -5,21 +5,16 @@
 #include <GL/glx.h>
 #include <X11/Xlib.h>
 
-/* macros */
 #define GLEW_STATIC
 
 #define GLX_CONTEXT_MAJOR_VERSION_ARB 0x2091
 #define GLX_CONTEXT_MINOR_VERSION_ARB 0x2092
 
-/* types */
-typedef GLXContext (*glXCreateContextAttribsARBProc)
-	(Display *, GLXFBConfig, GLXContext, Bool, const int *);
+typedef GLXContext (*glXCreateContextAttribsARBProc)(Display *, GLXFBConfig, GLXContext, Bool, const int *);
 
-/* functions */
 void engine_create_window(unsigned int w, unsigned int h);
 void engine_destroy_window(void);
 
-/* globals */
 extern Display *display;
 extern XWindowAttributes window_attribs;
 extern Window window;

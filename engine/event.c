@@ -8,14 +8,12 @@
 #include "engine.h"
 #include "window.h"
 
-/* forward function declarations */
 static void expose(XEvent *e);
 static void client_message(XEvent *e);
 static void key_press(XEvent *e);
 static void key_release(XEvent *e);
 static void mouse_motion(XEvent *e);
 
-/* variables */
 static void (*handler[LASTEvent])(XEvent *e) = {
 	[Expose] = expose,
 	[ClientMessage] = client_message,
@@ -28,22 +26,18 @@ struct KeyHandler key_handler;
 struct Mouse mouse;
 struct MouseHandler mouse_handler;
 
-/* functions */
-static void
-expose(XEvent *e)
+static void expose(XEvent *e)
 {
 	XGetWindowAttributes(display, window, &window_attribs);
 	glViewport(0, 0, window_attribs.width, window_attribs.height);
 }
 
-static void
-client_message(XEvent *e)
+static void client_message(XEvent *e)
 {
 	exit_game(EXIT_SUCCESS);
 }
 
-static void
-key_event(XEvent *e, bool pressed)
+static void key_event(XEvent *e, bool pressed)
 {
 	KeySym keysym;
 	XKeyEvent *ev;
@@ -62,20 +56,17 @@ key_event(XEvent *e, bool pressed)
 	}
 }
 
-static void
-key_press(XEvent *e)
+static void key_press(XEvent *e)
 {
 	key_event(e, true);
 }
 
-static void
-key_release(XEvent *e)
+static void key_release(XEvent *e)
 {
 	key_event(e, false);
 }
 
-static Bool
-predicate(Display *display, XEvent *event, char *arg)
+static Bool predicate(Display *display, XEvent *event, char *arg)
 {
 	if (event->type == MotionNotify) {
 		XMotionEvent *e = (XMotionEvent *)event;
@@ -87,13 +78,12 @@ predicate(Display *display, XEvent *event, char *arg)
 	return False;
 }
 
-static void
-mouse_motion(XEvent *e)
+static void mouse_motion(XEvent *e)
 {
 	struct MouseMove move;
 	int x = ((XMotionEvent *)e)->x, y = ((XMotionEvent *)e)->y;
-	int d; /* dummy */
-	Window rw; /* dummy */
+	int d; // dummy
+	Window rw; // dummy
 	XEvent ev;
 
 	move.x = x - mouse.x;
@@ -111,8 +101,7 @@ mouse_motion(XEvent *e)
 	mouse.y = window_attribs.height / 2;
 }
 
-bool
-init_keys(char **err)
+bool init_keys(char **err)
 {
 	key_handler.n = 0;
 	key_handler.size = 20 * sizeof(struct Key);
@@ -125,9 +114,7 @@ init_keys(char **err)
 	return true;
 }
 
-bool
-add_key(char **err, KeySym keysym, void (*on_press)(void),
-        void (*on_release)(void), void (*while_pressed)(void))
+bool add_key(char **err, KeySym keysym, void (*on_press)(void), void (*on_release)(void), void (*while_pressed)(void))
 {
 	key_handler.n++;
 	if (key_handler.n * sizeof(struct Key) > key_handler.size) {
@@ -150,8 +137,7 @@ add_key(char **err, KeySym keysym, void (*on_press)(void),
 	return true;
 }
 
-void
-destroy_keys(void)
+void destroy_keys(void)
 {
 	free(key_handler.keys);
 	key_handler.keys = NULL;
@@ -159,21 +145,17 @@ destroy_keys(void)
 	key_handler.size = 0;
 }
 
-void
-handle_events(void)
+void handle_events(void)
 {
-	XEvent e;
-	int i;
-
 	for (;;) {
+		XEvent e;
 		if (!XPending(display))
 			break;
 		XNextEvent(display, &e);
 		if (handler[e.type])
 			handler[e.type](&e);
 	}
-	for (i = 0; i < key_handler.n; i++)
-		if (key_handler.keys[i].pressed && \
-		    key_handler.keys[i].while_pressed)
+	for (uint i = 0; i < key_handler.n; i++)
+		if (key_handler.keys[i].pressed && key_handler.keys[i].while_pressed)
 			key_handler.keys[i].while_pressed();
 }

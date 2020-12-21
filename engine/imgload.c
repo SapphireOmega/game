@@ -5,8 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-char *
-img_strerror(enum img_err img_err)
+char *img_strerror(enum img_err img_err)
 {
 	char *err = (char *)malloc(sizeof(char) * 256);
 
@@ -18,12 +17,10 @@ img_strerror(enum img_err img_err)
 		strcpy(err, "error opening image file");
 		break;
 	case IMG_ERR_TYPE:
-		strcpy(err, "unsupported tga type,"
-		            " only supports uncompressed");
+		strcpy(err, "unsupported tga type, only supports uncompressed");
 		break;
 	case IMG_ERR_MODE:
-		strcpy(err, "unsupported color mode,"
-		            " only RGB and RGBA supported");
+		strcpy(err, "unsupported color mode, only RGB and RGBA supported");
 		break;
 	default:
 		strcpy(err, "unknown error");
@@ -32,8 +29,7 @@ img_strerror(enum img_err img_err)
 	return err;
 }
 
-bool
-load_tga_file(struct TGA_File *img, const char *filename)
+bool load_tga_file(struct TGA_File *img, const char *filename)
 {
 	FILE *fd;
 	long img_size;

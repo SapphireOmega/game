@@ -5,7 +5,6 @@
 #include <X11/Xlib.h>
 #include <X11/XKBlib.h>
 
-/* types */
 struct Key {
 	KeySym keysym;
 	bool pressed;
@@ -32,15 +31,12 @@ struct MouseHandler {
 	void (*move)(struct MouseMove move);
 };
 
-/* globals */
 extern struct KeyHandler key_handler;
 extern struct Mouse mouse;
 extern struct MouseHandler mouse_handler;
 
-/* functions */
 bool init_keys(char **err);
-bool add_key(char **err, KeySym keysym, void (*on_press)(void),
-             void (*on_release)(void), void (*while_pressed)(void));
+bool add_key(char **err, KeySym keysym, void (*on_press)(void), void (*on_release)(void), void (*while_pressed)(void));
 void destroy_keys(void);
 void handle_events(void);
 

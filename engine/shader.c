@@ -8,16 +8,13 @@
 #include "engine.h"
 #include "util.h"
 
-/* structs */
 struct BufferElement {
 	const char *name;
 	unsigned int count;
 	unsigned int offset;
 };
 
-/* functions */
-void
-parse_shader(const char *file, char **vs_dst, char **fs_dst)
+void parse_shader(const char *file, char **vs_dst, char **fs_dst)
 {
 	FILE *fd;
 	long len;
@@ -50,7 +47,7 @@ parse_shader(const char *file, char **vs_dst, char **fs_dst)
 	*fs_dst[0] = '\0';
 
 	for (linenum = 0;; linenum++) {
-		getline(&line, &n, fd); /* automatically allocates line */
+		getline(&line, &n, fd); // automatically allocates line
 		if (ferror(fd)) {
 			fprintf(stderr, "error reading from %s: %s\n",
 			        file, strerror(errno));
@@ -84,8 +81,7 @@ parse_shader(const char *file, char **vs_dst, char **fs_dst)
 	fclose(fd);
 }
 
-GLuint
-compile_shader(GLenum type, const char *src)
+GLuint compile_shader(GLenum type, const char *src)
 {
 	GLuint shader;
 	GLuint result;
@@ -107,8 +103,7 @@ compile_shader(GLenum type, const char *src)
 	return shader;
 }
 
-GLuint
-create_shader_program(const char *vs_src, const char *fs_src)
+GLuint create_shader_program(const char *vs_src, const char *fs_src)
 {
 	GLuint vs;
 	GLuint fs;
@@ -128,9 +123,7 @@ create_shader_program(const char *vs_src, const char *fs_src)
 	return program;
 }
 
-VertexBuffer *
-create_vb(const void *data, size_t size, unsigned int type,
-          size_t type_size)
+VertexBuffer *create_vb(const void *data, size_t size, unsigned int type, size_t type_size)
 {
 	VertexBuffer *vb;
 
@@ -149,23 +142,20 @@ create_vb(const void *data, size_t size, unsigned int type,
 	return vb;
 }
 
-void
-destroy_vb(VertexBuffer *vb)
+void destroy_vb(VertexBuffer *vb)
 {
 	glDeleteBuffers(1, &vb->id);
 	free(vb);
 }
 
-VertexBufferLayout *
-create_vb_layout(const VertexBuffer *vb, unsigned int max_count)
+VertexBufferLayout *create_vb_layout(const VertexBuffer *vb, unsigned int max_count)
 {
 	VertexBufferLayout *layout;
 
 	layout = (VertexBufferLayout *)malloc(sizeof(VertexBufferLayout));
 	if (layout == NULL)
 		die("error allocating space for vertex buffer");
-	layout->elems = (struct BufferElement *) \
-	                malloc(sizeof(struct BufferElement) * max_count);
+	layout->elems = (struct BufferElement *)malloc(sizeof(struct BufferElement) * max_count);
 	layout->count = 0;
 	layout->max_count = max_count;
 	layout->stride = 0;
@@ -174,21 +164,18 @@ create_vb_layout(const VertexBuffer *vb, unsigned int max_count)
 	return layout;
 }
 
-void
-destroy_vb_layout(VertexBufferLayout *layout)
+void destroy_vb_layout(VertexBufferLayout *layout)
 {
 	free(layout->elems);
 	free(layout);
 }
 
-void
-vb_layout_add(VertexBufferLayout *layout, const char *name, unsigned int count)
+void vb_layout_add(VertexBufferLayout *layout, const char *name, unsigned int count)
 {
-	unsigned int i;
+	//unsigned int i;
 
 	if (layout->count >= layout->max_count)
-		die("buffer layout exceeded maximum number of elements: %s",
-		    strerror(errno));
+		die("buffer layout exceeded maximum number of elements: %s", strerror(errno));
 
 	layout->elems[layout->count].name = name;
 	layout->elems[layout->count].count = count;
@@ -198,21 +185,17 @@ vb_layout_add(VertexBufferLayout *layout, const char *name, unsigned int count)
 	layout->stride += count;
 }
 
-VertexArray *
-create_va(unsigned int init_count)
+VertexArray *create_va(unsigned int init_count)
 {
 	VertexArray *va;
 
 	va = (VertexArray *)malloc(sizeof(VertexArray));
 	if (va == NULL)
-		die("error allocating space for vertex array: %s",
-		    strerror(errno));
+		die("error allocating space for vertex array: %s", strerror(errno));
 
-	va->layouts = (const VertexBufferLayout **) \
-		      malloc(init_count * sizeof(VertexBufferLayout *));
+	va->layouts = (const VertexBufferLayout **)malloc(init_count * sizeof(VertexBufferLayout *));
 	if (va->layouts == NULL)
-		die("error allocating space for buffer layouts: %s",
-		    strerror(errno));
+		die("error allocating space for buffer layouts: %s", strerror(errno));
 
 	va->count = 0;
 	va->max_count = init_count;
@@ -222,16 +205,14 @@ create_va(unsigned int init_count)
 	return va;
 }
 
-void
-destroy_va(VertexArray *va)
+void destroy_va(VertexArray *va)
 {
 	glDeleteVertexArrays(1, &va->id);
 	free(va->layouts);
 	free(va);
 }
 
-void
-va_add(VertexArray *va, const VertexBufferLayout *layout)
+void va_add(VertexArray *va, const VertexBufferLayout *layout)
 {
 	if (va->count == va->max_count) {
 		va->max_count *= 2;
@@ -249,16 +230,10 @@ va_add(VertexArray *va, const VertexBufferLayout *layout)
 	va->count++;
 }
 
-void
-va_use_shader(VertexArray *va, uint shader)
+void va_use_shader(VertexArray *va, uint shader)
 {
-	uint i, j;
-
-	GLenum e;
-
 	glBindVertexArray(va->id);
-
-	for (i = 0; i < va->count; i++) {
+	for (uint i = 0; i < va->count; i++) {
 		const VertexBufferLayout *layout;
 
 		layout = va->layouts[i];
@@ -269,7 +244,7 @@ va_use_shader(VertexArray *va, uint shader)
 		glBindBuffer(GL_ARRAY_BUFFER, layout->vb->id);
 		glUseProgram(shader);
 
-		for (j = 0; j < layout->count; j++) {
+		for (uint j = 0; j < layout->count; j++) {
 			const struct BufferElement *elem;
 			int attrib;
 			GLsizei stride;
@@ -282,21 +257,17 @@ va_use_shader(VertexArray *va, uint shader)
 
 			attrib = glGetAttribLocation(shader, elem->name);
 			glEnableVertexAttribArray(attrib);
-			glVertexAttribPointer(attrib, elem->count,
-			                      layout->vb->type, GL_FALSE,
-					      stride, (void *)offset);
+			glVertexAttribPointer(attrib, elem->count, layout->vb->type, GL_FALSE, stride, (void *)offset);
 		}
 	}
 }
 
-void
-va_bind(VertexArray *va)
+void va_bind(VertexArray *va)
 {
 	glBindVertexArray(va->id);
 }
 
-void
-va_unbind(void)
+void va_unbind(void)
 {
 	glBindVertexArray(0);
 }

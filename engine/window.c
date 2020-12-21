@@ -7,7 +7,6 @@
 
 #include "util.h"
 
-/* variables */
 static int screen_id;
 static Window root_window;
 static Colormap colormap;
@@ -19,20 +18,16 @@ Display *display;
 XWindowAttributes window_attribs;
 Window window;
 
-/* functions */
-static void
-check_glx_version(void)
+static void check_glx_version(void)
 {
 	int glx_major;
 	int glx_minor;
 
-	if (!glXQueryVersion(display, &glx_major, &glx_minor) ||
-	    (glx_major == 1 && glx_minor < 3) || glx_major < 1)
+	if (!glXQueryVersion(display, &glx_major, &glx_minor) || (glx_major == 1 && glx_minor < 3) || glx_major < 1)
 		die("invalid GLX version (%d, %d)\n", glx_major, glx_minor);
 }
 
-static void
-match_fb_configs(GLXFBConfig **fbc, int *fbcnt)
+static void match_fb_configs(GLXFBConfig **fbc, int *fbcnt)
 {
 	static int visual_attribs[] = {
 		GLX_X_RENDERABLE, True,
@@ -56,8 +51,7 @@ match_fb_configs(GLXFBConfig **fbc, int *fbcnt)
 	printf("found %d matching FB configs\n", *fbcnt);
 }
 
-static GLXFBConfig
-get_best_fb_config(GLXFBConfig *fbc, int fbcnt)
+static GLXFBConfig get_best_fb_config(GLXFBConfig *fbc, int fbcnt)
 {
 	int i;
 	int best_fbc = -1;
@@ -74,13 +68,11 @@ get_best_fb_config(GLXFBConfig *fbc, int fbcnt)
 		if (!vi)
 			continue;
 
-		glXGetFBConfigAttrib(display, fbc[i], GLX_SAMPLE_BUFFERS,
-		                     &samp_buf);
+		glXGetFBConfigAttrib(display, fbc[i], GLX_SAMPLE_BUFFERS, &samp_buf);
 		glXGetFBConfigAttrib(display, fbc[i], GLX_SAMPLES, &samples);
 
-		printf("matching fbconfig %d,"
-		       " visual ID 0x%2x: SAMPLE_BUFFERS = %d,"
-		       " SAMPLE = %d\n", i, vi->visualid, samp_buf, samples);
+		printf("matching fbconfig %d, visual ID 0x%2x: SAMPLE_BUFFERS = %d, SAMPLE = %d\n",
+		       i, vi->visualid, samp_buf, samples);
 
 		if (best_fbc < 0 || samp_buf && samples > best_num_samp) {
 			best_fbc = i;
@@ -98,14 +90,13 @@ get_best_fb_config(GLXFBConfig *fbc, int fbcnt)
 	return fbc[best_fbc];
 }
 
-static GLXFBConfig
-get_fb_config(void)
+static GLXFBConfig get_fb_config(void)
 {
 	int fbcnt;
 	GLXFBConfig *fbc;
 	GLXFBConfig best_fbc;
 
-	check_glx_version(); /* version 1.3 required for fbconfigs */
+	check_glx_version(); // version 1.3 required for fbconfigs
 	match_fb_configs(&fbc, &fbcnt);
 	best_fbc = get_best_fb_config(fbc, fbcnt);
 	XFree(fbc);
@@ -113,8 +104,7 @@ get_fb_config(void)
 	return best_fbc;
 }
 
-static void
-create_window(XVisualInfo *vi, unsigned int w, unsigned int h)
+static void create_window(XVisualInfo *vi, unsigned int w, unsigned int h)
 {
 	XSetWindowAttributes swa;
 	char no_data[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
@@ -125,8 +115,7 @@ create_window(XVisualInfo *vi, unsigned int w, unsigned int h)
 	colormap = XCreateColormap(display, root_window, vi->visual, AllocNone);
 
 	swa.colormap = colormap;
-	swa.event_mask = ExposureMask | KeyPressMask | KeyReleaseMask
-			 | PointerMotionMask;
+	swa.event_mask = ExposureMask | KeyPressMask | KeyReleaseMask | PointerMotionMask;
 	swa.border_pixel = BlackPixel(display, screen_id);
 	swa.background_pixel = WhitePixel(display, screen_id);
 
@@ -143,23 +132,19 @@ create_window(XVisualInfo *vi, unsigned int w, unsigned int h)
 
 	black.red = black.green = black.blue = 0;
 	bitmap_no_data = XCreateBitmapFromData(display, window, no_data, 8, 8);
-	invisible_cursor = \
-		XCreatePixmapCursor(display, bitmap_no_data, bitmap_no_data,
-		                    &black, &black, 0, 0);
+	invisible_cursor = XCreatePixmapCursor(display, bitmap_no_data, bitmap_no_data, &black, &black, 0, 0);
 	XDefineCursor(display, window, invisible_cursor);
 	XFreeCursor(display, invisible_cursor);
 	XFreePixmap(display, bitmap_no_data);
 }
 
-static int
-context_error_handler(Display *display, XErrorEvent *e)
+static int context_error_handler(Display *display, XErrorEvent *e)
 {
 	context_error = true;
 	return 0;
 }
 
-static bool
-extension_supported(const char *ext_list, const char *extension)
+static bool extension_supported(const char *ext_list, const char *extension)
 {
 	const char *start;
 	const char *where;
@@ -187,8 +172,7 @@ extension_supported(const char *ext_list, const char *extension)
 	return false;
 }
 
-static void
-create_context(GLXFBConfig fbc)
+static void create_context(GLXFBConfig fbc)
 {
 	const char *glxexts;
 	glXCreateContextAttribsARBProc glXCreateContextAttribsARB = 0;
@@ -199,38 +183,25 @@ create_context(GLXFBConfig fbc)
 	};
 
 	glxexts = glXQueryExtensionsString(display, screen_id);
-	glXCreateContextAttribsARB = \
-		(glXCreateContextAttribsARBProc) \
-			glXGetProcAddressARB((const GLubyte*)
-			                     "glXCreateContextAttribsARB");
+	glXCreateContextAttribsARB =
+		(glXCreateContextAttribsARBProc)glXGetProcAddressARB((const GLubyte*)"glXCreateContextAttribsARB");
 
 	render_context = 0;
-	int (*old_error_handler)(Display *, XErrorEvent *) =
-		XSetErrorHandler(&context_error_handler);
+	int (*old_error_handler)(Display *, XErrorEvent *) = XSetErrorHandler(&context_error_handler);
 
-	if (!extension_supported(glxexts, "GLX_ARB_create_context") ||
-	    !glXCreateContextAttribsARB)
-	{
-		printf("glXCreateContextAttribsARB() not found ... "
-		       "using old-style GLX context\n");
-		render_context = \
-			glXCreateNewContext(display, fbc, GLX_RGBA_TYPE, 0,
-			                    True);
+	if (!extension_supported(glxexts, "GLX_ARB_create_context") || !glXCreateContextAttribsARB) {
+		printf("glXCreateContextAttribsARB() not found ... using old-style GLX context\n");
+		render_context = glXCreateNewContext(display, fbc, GLX_RGBA_TYPE, 0, True);
 	} else {
 		printf("creating context\n");
-		render_context = \
-			glXCreateContextAttribsARB(display, fbc, 0, True,
-			                           ctxattr);
+		render_context = glXCreateContextAttribsARB(display, fbc, 0, True, ctxattr);
 		XFlush(display);
 		if (context_error || !render_context) {
 			ctxattr[1] = 1;
 			ctxattr[3] = 0;
 			context_error = false;
-			printf("failed to create GL 3.0 context ... "
-			       "using old-style GLX context\n");
-			render_context = \
-				glXCreateNewContext(display, fbc, GLX_RGBA_TYPE,
-				                    0, True);
+			printf("failed to create GL 3.0 context ... using old-style GLX context\n");
+			render_context = glXCreateNewContext(display, fbc, GLX_RGBA_TYPE, 0, True);
 		}
 	}
 
@@ -249,8 +220,7 @@ create_context(GLXFBConfig fbc)
 	glXMakeCurrent(display, window, render_context);
 }
 
-void
-engine_create_window(unsigned int w, unsigned int h)
+void engine_create_window(unsigned int w, unsigned int h)
 {
 
 	GLXFBConfig fbc;
@@ -276,8 +246,7 @@ engine_create_window(unsigned int w, unsigned int h)
 		die("error initializing glew: %s\n", glewGetErrorString(error));
 }
 
-void
-engine_destroy_window(void)
+void engine_destroy_window(void)
 {
 	glXMakeCurrent(display, None, NULL);
 	glXDestroyContext(display, render_context);

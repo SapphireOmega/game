@@ -10,9 +10,7 @@
 #include "util.h"
 #include "window.h"
 
-/* functions */
-static void
-engine_setup(void)
+static void engine_setup(void)
 {
 	char *err;
 
@@ -21,16 +19,14 @@ engine_setup(void)
 		die("error initializing keys: %s", err);
 }
 
-static void
-engine_cleanup(void)
+static void engine_cleanup(void)
 {
 	destroy_keys();
 	//XAutoRepeatOn(display);
 	engine_destroy_window();
 }
 
-void
-engine_run(void)
+void engine_run(void)
 {
 	engine_setup();
 	if (current_state.setup)
@@ -49,8 +45,7 @@ engine_run(void)
 	//	current_state.cleanup();
 }
 
-void
-exit_game(int status)
+void exit_game(int status)
 {
 	printf("exiting game\n");
 	if (current_state.cleanup)

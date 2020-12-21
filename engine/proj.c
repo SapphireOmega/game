@@ -2,74 +2,85 @@
 
 #include <math.h>
 #include <stdio.h>
+#include <string.h>
 
-/* globals */
-static Matrix viewm;
-static Matrix projm;
+#include "vec.h"
 
-/* functions */
-void
-fps_view(Matrix res)
+void fps_view(float res[4][4])
 {
-	Vector vec;
-	Matrix rot;
+	float x[3] = { 1.0f, 0.0f, 0.0f };
+	float y[3] = { 0.0f, 1.0f, 0.0f };
+	float x_rel[3];
+	float cam_pos[3] = { current_camera->x, current_camera->y, current_camera->z };
 
-#ifndef DEBUG
-	assert(res.val != NULL);
-	assert(res.i == 4);
-	assert(res.j == 4);
-#endif
+	float Ry[3][3];
+	float Rx_rel[3][3];
+	float Rtot[3][3];
+	float Rtot_h[4][4];
+	float transl[4][4];
 
-	rot = create_matrix_empty(3, 3);
-	vec = create_vector(3, 0.0f, 1.0f, 0.0f);
-	rotation_3d(rot, vec, current_camera->angle_y);
-	vec = create_vector(3, 1.0f, 0.0f, 0.0f);
-	matrix_multiply_vector_stack(3, rot, vec);
-	rotate_3d(rot, vec, current_camera->angle_x);
-	homogeneous(res, rot);
-	vec = create_vector(3,
-		current_camera->x,
-		current_camera->y,
-		current_camera->z
-	);
-	translate(res, vec);
-	invert(res);
+	rotation_3d(Ry, y, current_camera->angle_y);
+
+	matrix_vector_product(3, 3, x_rel, Ry, x);
+	rotation_3d(Rx_rel, x_rel, current_camera->angle_x);
+	matrix_matrix_product(3, 3, 3, Rtot, Rx_rel, Ry);
+	homogeneous(3, Rtot_h, Rtot);
+	translation(3, transl, cam_pos);
+	matrix_matrix_product(4, 4, 4, res, transl, Rtot_h);
+	inverse(4, res, res);
 }
 
-void
-projection(Matrix res, float aspect)
+void projection(float res[4][4], float aspect)
 {
-	float t, b, l, r, n, f;
-	Matrix tmp;
+	float n = current_camera->n;
+	float f = current_camera->f;
+	float t = tanf(current_camera->fovx / 2.0f) * n;
+	float b = -t;
+	float r = t * aspect;
+	float l = -r;
 
-#ifdef DEBUG
-	assert(res.val != NULL);
-	assert(res.i == 4);
-	assert(res.j == 4);
-#endif
+	switch (current_camera->proj) {
+	case PERSP:
+		res[0][0] = 2.0f * n / (r - l);
+		res[0][1] = 0.0f;
+		res[0][2] = (l + r) / (r - l);
+		res[0][3] = 0.0f;
 
-	n = current_camera->n;
-	f = current_camera->f;
-	t = tanf(current_camera->fovx / 2.0f) * n;
-	b = -t;
-	r = t * aspect;
-	l = -r;
+		res[1][0] = 0.0f;
+		res[1][1] = 2.0f * n / (t - b);
+		res[1][2] = (b + t) / (t - b);
+		res[1][3] = 0.0f;
 
-	if (current_camera->proj == PERSP) {
-		tmp = create_matrix(4, 4,
-			2.0f * n / (r - l), 0.0f, (l + r) / (r - l), 0.0f,
-			0.0f, 2.0f * n / (t - b), (b + t) / (t - b), 0.0f,
-			0.0f, 0.0f, -(f + n) / (f - n), -2.0f * f * n / (f - n),
-			0.0f, 0.0f, -1.0f, 0.0f
-		);
-	} else if (current_camera->proj == ORTHO) {
-		tmp = create_matrix(4, 4,
-			2.0f / (r - l), 0.0f, 0.0f, - (r + l) / (r - l),
-			0.0f, 2.0f / (t - b), 0.0f, - (t + b) / (t - b),
-			0.0f, 0.0f, -2.0f / (f - n), - (f + n) / (f - n),
-			0.0f, 0.0f, 0.0f, 1.0f
-		);
+		res[2][0] = 0.0f;
+		res[2][1] = 0.0f;
+		res[2][2] = -(f + n) / (f - n);
+		res[2][3] = -2.0f * f * n / (f - n);
+
+		res[3][0] = 0.0f;
+		res[3][1] = 0.0f;
+		res[3][2] = -1.0f;
+		res[3][3] = 0.0f;
+		break;
+	case ORTHO:
+		res[0][0] = 2.0f / (r - l);
+		res[0][1] = 0.0f;
+		res[0][2] = 0.0f;
+		res[0][3] = -(r + l) / (r - l);
+
+		res[1][0] = 0.0f;
+		res[1][1] = 2.0f / (t - b);
+		res[1][2] = 0.0f;
+		res[1][3] = -(t + b) / (t - b);
+
+		res[2][0] = 0.0f;
+		res[2][1] = 0.0f;
+		res[2][2] = -2.0f / (f - n);
+		res[2][3] = -(f + n) / (f - n);
+
+		res[3][0] = 0.0f;
+		res[3][1] = 0.0f;
+		res[3][2] = 0.0f;
+		res[3][3] = 1.0f;
+		break;
 	}
-
-	matrix_copy(res, tmp);
 }

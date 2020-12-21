@@ -1,8 +1,6 @@
 #ifndef PROJ_H
 #define PROJ_H
 
-#include "trans.h"
-
 #include <stdbool.h>
 
 /* enums */
@@ -21,8 +19,9 @@ struct Camera {
 struct Camera *current_camera;
 
 /* functions */
-void fps_view(Matrix res);
-
-void projection(Matrix res, float aspect);
+//void fps_view(Matrix res);
+void fps_view(float res[4][4]);
+//void projection(Matrix res, float aspect);
+void projection(float res[4][4], float aspect);
 
 #endif

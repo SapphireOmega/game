@@ -3,7 +3,6 @@
 
 /* TODO: stack machine */
 
-/* structs */
 struct GameState {
 	void (*setup)(void);
 	void (*update)(void);
@@ -11,10 +10,8 @@ struct GameState {
 	void (*cleanup)(void);
 };
 
-/* globals */
 extern struct GameState current_state;
 
-/* functions */
 void engine_set_current_state(struct GameState state);
 
 #endif /* STATE_H */

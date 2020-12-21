@@ -5,8 +5,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-void
-die(const char *fmt, ...)
+void die(const char *fmt, ...)
 {
 	va_list ap;
 
