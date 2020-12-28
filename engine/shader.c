@@ -33,6 +33,7 @@ void parse_shader(const char *file, char **vs_dst, char **fs_dst)
 	fseek(fd, 0, SEEK_SET);
 	*vs_dst = (char *)malloc(sizeof(char) * len);
 	*fs_dst = (char *)malloc(sizeof(char) * len);
+
 	if (!vs_dst) {
 		fprintf(stderr, "error allocating vertex shader buffer\n");
 		exit_game(EXIT_FAILURE);
@@ -49,8 +50,7 @@ void parse_shader(const char *file, char **vs_dst, char **fs_dst)
 	for (linenum = 0;; linenum++) {
 		getline(&line, &n, fd); // automatically allocates line
 		if (ferror(fd)) {
-			fprintf(stderr, "error reading from %s: %s\n",
-			        file, strerror(errno));
+			fprintf(stderr, "error reading from %s: %s\n", file, strerror(errno));
 			exit_game(EXIT_FAILURE);
 		}
 
@@ -172,8 +172,6 @@ void destroy_vb_layout(VertexBufferLayout *layout)
 
 void vb_layout_add(VertexBufferLayout *layout, const char *name, unsigned int count)
 {
-	//unsigned int i;
-
 	if (layout->count >= layout->max_count)
 		die("buffer layout exceeded maximum number of elements: %s", strerror(errno));
 
@@ -216,13 +214,9 @@ void va_add(VertexArray *va, const VertexBufferLayout *layout)
 {
 	if (va->count == va->max_count) {
 		va->max_count *= 2;
-		va->layouts = (const VertexBufferLayout **) \
-			     realloc(va->layouts,
-		                     va->max_count * \
-				     sizeof(VertexBufferLayout *));
+		va->layouts = (const VertexBufferLayout **)realloc(va->layouts, va->max_count * sizeof(VertexBufferLayout *));
 		if (va->layouts == NULL)
-			die("error reallocating space for buffer layouts: %s",
-			    strerror(errno));
+			die("error reallocating space for buffer layouts: %s", strerror(errno));
 	}
 
 	va->layouts[va->count] = layout;

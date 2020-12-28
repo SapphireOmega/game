@@ -15,7 +15,7 @@ struct TGA_File {
 	enum color_mode color_mode;
 };
 
-enum img_err img_err;
+enum img_err img_err = IMG_ERR_NONE;
 
 char *img_strerror(enum img_err img_err);
 bool load_tga_file(struct TGA_File *img, const char *filename);

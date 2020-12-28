@@ -70,8 +70,7 @@ static Bool predicate(Display *display, XEvent *event, char *arg)
 {
 	if (event->type == MotionNotify) {
 		XMotionEvent *e = (XMotionEvent *)event;
-		if (e->x == window_attribs.width / 2 && \
-		    e->y == window_attribs.height / 2)
+		if (e->x == window_attribs.width / 2 && e->y == window_attribs.height / 2)
 			return True;
 	}
 
@@ -94,8 +93,7 @@ static void mouse_motion(XEvent *e)
 
 	mouse_handler.move(move);
 
-	XWarpPointer(display, 0, window, 0, 0, 0, 0, window_attribs.width / 2,
-	             window_attribs.height / 2);
+	XWarpPointer(display, 0, window, 0, 0, 0, 0, window_attribs.width / 2, window_attribs.height / 2);
 	XCheckIfEvent(display, &ev, predicate, 0);
 	mouse.x = window_attribs.width / 2;
 	mouse.y = window_attribs.height / 2;

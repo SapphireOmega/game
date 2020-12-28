@@ -1,8 +1,10 @@
 /* TODO:
- * load obj
- * lights
- * error checking in the functions instead of by the program
- * fix the X connection broken message
+ * change error messages to start with capital letter
+ * change struct names to snake casing instead of camel casing
+ * different types of meshes (such as coloured, textured, etc.)
+ * default shaders for meshes
+ * draw functions for meshes
+ * lighting
  * shader abstraction
  * texture abstraction
  * mipmaps
@@ -32,15 +34,21 @@
 #include <engine/vec.h>
 #include <engine/util.h>
 #include <engine/window.h>
+#include <engine/obj.h>
+#include <engine/mesh.h>
 
-/* variables */
-static GLuint shader_program;
+static uint shader_program;
+struct mesh mesh;
 static VertexBuffer *vb;
+static VertexBuffer *mesh_vb;
 static VertexBufferLayout *vb_layout;
+static VertexBufferLayout *mesh_vb_layout;
 static VertexArray *va;
-static GLuint ib;
+static VertexArray *mesh_va;
+static uint ib;
+static uint mesh_ib;
 static struct TGA_File test_image;
-static GLuint tex;
+static uint tex;
 static struct Camera cam = {
 	.x = 0.0f, .y = 0.0f, .z = 3.0f,
 	.angle_x = 0.0f, .angle_y = 0.0f, .angle_z = 0.0f,
@@ -50,7 +58,7 @@ static struct Camera cam = {
 };
 
 static const float vertices[] = {
-/*      pos                  color            */
+/*   pos                 color            */
 	/* front */
 	-0.5f,  0.5f,  0.5f, 1.0f, 0.4f, 1.0f,
 	 0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f,
@@ -64,10 +72,10 @@ static const float vertices[] = {
 	-0.5f, -0.5f, -0.5f, 0.4f, 0.4f, 0.4f,
 
 	/* floor */
-	-1.0f, -0.5001f, -1.0f, 1.0f, 1.0f, 1.0f,
-	 1.0f, -0.5001f, -1.0f, 0.4f, 1.0f, 1.0f,
-	 1.0f, -0.5001f,  1.0f, 0.4f, 0.4f, 1.0f,
-	-1.0f, -0.5001f,  1.0f, 1.0f, 0.4f, 1.0f,
+	-1.0f, -0.5f, -1.0f, 1.0f, 1.0f, 1.0f,
+	 1.0f, -0.5f, -1.0f, 0.4f, 1.0f, 1.0f,
+	 1.0f, -0.5f,  1.0f, 0.4f, 0.4f, 1.0f,
+	-1.0f, -0.5f,  1.0f, 1.0f, 0.4f, 1.0f,
 };
 
 //static const float vertices[] = {
@@ -121,21 +129,21 @@ static const float vertices[] = {
 //	-0.5f, -0.5f,  0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
 //
 //	/* floor */
-//	-1.5f, -0.5001f, -1.5f, 2.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-//	 1.5f, -0.5001f, -1.5f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-//	 1.5f, -0.5001f,  1.5f, 0.0f, 1.0f, 2.0f, 0.0f, 0.0f,
-//	 1.5f, -0.5001f,  1.5f, 0.0f, 1.0f, 2.0f, 0.0f, 0.0f,
-//	-1.5f, -0.5001f,  1.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f,
-//	-1.5f, -0.5001f, -1.5f, 2.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+//	-1.5f, -0.5f, -1.5f, 2.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+//	 1.5f, -0.5f, -1.5f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+//	 1.5f, -0.5f,  1.5f, 0.0f, 1.0f, 2.0f, 0.0f, 0.0f,
+//	 1.5f, -0.5f,  1.5f, 0.0f, 1.0f, 2.0f, 0.0f, 0.0f,
+//	-1.5f, -0.5f,  1.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f,
+//	-1.5f, -0.5f, -1.5f, 2.0f, 0.0f, 1.0f, 0.0f, 0.0f,
 //};
 
-static const GLuint indices[] = {
-	0, 1, 2, 2, 3, 0,
-	4, 5, 6, 6, 7, 4,
-	4, 0, 3, 3, 7, 4,
-	1, 5, 6, 6, 2, 1,
-	4, 5, 1, 1, 0, 4,
-	3, 2, 6, 6, 7, 3,
+static const uint indices[] = {
+	0, 1,  2,  2,  3, 0,
+	4, 5,  6,  6,  7, 4,
+	4, 0,  3,  3,  7, 4,
+	1, 5,  6,  6,  2, 1,
+	4, 5,  1,  1,  0, 4,
+	3, 2,  6,  6,  7, 3,
 	8, 9, 10, 10, 11, 8
 };
 
@@ -200,15 +208,25 @@ void setup(void)
 {
 	char *vs_src, *fs_src, *err;
 
+	/* Create window */
 	engine_create_window(800, 600);
 
+	/* Create shader */
 	parse_shader("res/shaders/shader.glsl", &vs_src, &fs_src);
 	shader_program = create_shader_program(vs_src, fs_src);
 	free(vs_src);
 	free(fs_src);
 
+	/* Load mesh */
+	struct OBJ_FILE file;
+	load_obj_file(&file, "res/models/monke.obj");
+	mesh_from_obj_file(&mesh, &file);
+
+	/* Create cube */
 	va = create_va(1);
+
 	vb = create_vb(vertices, sizeof(vertices), GL_FLOAT, sizeof(float));
+	mesh_vb = create_vb(mesh.vertices, mesh.vertices_size * sizeof(struct vertex), GL_FLOAT, sizeof(float));
 
 	vb_layout = create_vb_layout(vb, 2);
 	vb_layout_add(vb_layout, "position", 3);
@@ -222,9 +240,25 @@ void setup(void)
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
+	/* Create mesh */
+	mesh_va = create_va(1);
+
+	mesh_vb_layout = create_vb_layout(mesh_vb, 1);
+	vb_layout_add(mesh_vb_layout, "position", 3);
+
+	va_add(mesh_va, mesh_vb_layout);
+
+	va_use_shader(mesh_va, shader_program);
+
+	glGenBuffers(1, &mesh_ib);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_ib);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh.faces_size * sizeof(uint), mesh.faces, GL_STATIC_DRAW);
+
+	/* Load image */
 	if (!load_tga_file(&test_image, "res/textures/test.tga"))
 		die("error loading tga file: %s\n", img_strerror(img_err));
 
+	/* Create texture */
 	glGenTextures(1, &tex);
 	glBindTexture(GL_TEXTURE_2D, tex);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -233,6 +267,7 @@ void setup(void)
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, test_image.width, test_image.height, 0, GL_RGBA, GL_FLOAT, test_image.data); 
 	glEnable(GL_DEPTH_TEST);
 
+	/* Setup controls */
 	if (!add_key(&err, XK_w, NULL, NULL, move_foreward))
 		die("error adding key: %s", err);
 	if (!add_key(&err, XK_s, NULL, NULL, move_backward))
@@ -249,6 +284,7 @@ void setup(void)
 		die("error adding key: %s", err);
 	mouse_handler.move = mouse_move;
 
+	/* Initialise vectors and matrices */
 	vel[0] = vel[1] = vel[2] = 0.0f;
 
 	current_camera = &cam;
@@ -288,11 +324,17 @@ void update(void)
 
 void render(void)
 {
-	float proj[4][4], model[4][4], view[4][4], projt[4][4], modelt[4][4], viewt[4][4], i[4][4];
-	GLint proj_uni, model_uni, view_uni, override_color_uni;
+	float proj[4][4], model[4][4], mesh_model[4][4], view[4][4];
+	float projt[4][4], modelt[4][4], mesh_modelt[4][4], viewt[4][4];
+	float i[4][4];
+	int proj_uni, model_uni, view_uni, override_color_uni;
 	float aspect;
 
 	identity(4, 4, i);
+
+	float mesh_model_transl[3] = { 3.0f, 0.0f, 0.0f };
+	identity(4, 4, mesh_model);
+	add_translation(3, mesh_model, mesh_model, mesh_model_transl);
 
 	fps_view(view);
 	aspect = (float)window_attribs.width / (float)window_attribs.height;
@@ -301,6 +343,7 @@ void render(void)
 
 	/* OpenGl uses column-major order (I found out the hard way) */
 	transpose(4, 4, modelt, model);
+	transpose(4, 4, mesh_modelt, mesh_model);
 	transpose(4, 4, viewt, view);
 	transpose(4, 4, projt, proj);
 
@@ -319,29 +362,33 @@ void render(void)
 	glClearColor(0.0, 0.7, 0.7, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	/* draw cube */
-	//glDrawArrays(GL_TRIANGLES, 0, 36);
+	/* Draw cube */
+	glUniformMatrix4fv(model_uni, 1, GL_FALSE, (float *)modelt);
+	va_bind(va);
 	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
-	/* only draw reflection when you can actually see it, in other words,
-	 * only if the camera is above the plane
-	 */
+	/* Draw mesh */
+	va_bind(mesh_va);
+	glUniformMatrix4fv(model_uni, 1, GL_FALSE, (float *)mesh_modelt);
+	glDrawElements(GL_TRIANGLES, mesh.faces_size, GL_UNSIGNED_INT, 0);
+
+	/* Draw floor and reflection */
+	va_bind(va);
+	/* Only draw reflection when you can see it, i.e. if the camera is above the plane */
 	if (current_camera->y > -0.5f) { 
-		/* enable the stencil test to create a reflection */
+		/* Enable the stencil test to only draw the reflection on the floor pane */
 		glEnable(GL_STENCIL_TEST);
 
-		/* draw floor */
+		/* Draw floor */
 		glUniformMatrix4fv(model_uni, 1, GL_FALSE, (float *)i);
 		glStencilFunc(GL_ALWAYS, 1, 0xff); // set any stencil to 1
 		glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 		glStencilMask(0xff); // write to stencil buffer
-		glDepthMask(GL_FALSE); // don't write to depth buffer
+		glDepthMask(GL_FALSE); // don't write to depth buffer so the reflection can be drawn over the floor
 		glClear(GL_STENCIL_BUFFER_BIT); // clear stencil buffer
-	
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (GLvoid *)(36 * sizeof(uint)));
-		//glDrawArrays(GL_TRIANGLES, 36, 6);
 
-		/* draw cube reflection */
+		/* Draw cube reflection */
 		glStencilFunc(GL_EQUAL, 1, 0xff); // pass if equal to 1
 		glStencilMask(0x00); // don't write to stencil buffer
 		glDepthMask(GL_TRUE); // write to depth buffer
@@ -359,16 +406,15 @@ void render(void)
 		transpose(4, 4, reflection_model_t, reflection_model);
 
 		glUniformMatrix4fv(model_uni, 1, GL_FALSE, (float *)reflection_model_t);
-		glUniform3f(override_color_uni, 0.5f, 0.6f, 1.0f); /* darken */
+		glUniform3f(override_color_uni, 0.5f, 0.6f, 1.0f); // darken
 		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 		glUniform3f(override_color_uni, 1.0f, 1.0f, 1.0f);
 
-		/* disable stencil test again */
+		/* Disable stencil test again */
 		glDisable(GL_STENCIL_TEST);
 	} else {
-		glUniformMatrix4fv(model_uni, 1, GL_FALSE, (float *)i);
+		glUniformMatrix4fv(model_uni, 1, GL_FALSE, (float *)i); // don't rotate floor
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (GLvoid *)(36 * sizeof(uint)));
-		//glDrawArrays(GL_TRIANGLES, 36, 6);
 	}
 
 	glXSwapBuffers(display, window);
@@ -378,8 +424,12 @@ void cleanup(void)
 {
 	glDeleteProgram(shader_program);
 	destroy_vb(vb);
+	destroy_vb(mesh_vb);
 	destroy_vb_layout(vb_layout);
+	destroy_vb_layout(mesh_vb_layout);
 	destroy_va(va);
+	destroy_va(mesh_va);
+	destroy_mesh(&mesh);
 }
 
 int main(int argc, char *argv[])
