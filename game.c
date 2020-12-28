@@ -308,9 +308,9 @@ void update(void)
 {
 	normalize(3, vel, vel);
 
-	cam.x += vel[0] * (float)delta_time;
-	cam.y += vel[1] * (float)delta_time;
-	cam.z += vel[2] * (float)delta_time;
+	cam.x += vel[0] * (float)delta_time * 2.0f;
+	cam.y += vel[1] * (float)delta_time * 2.0f;
+	cam.z += vel[2] * (float)delta_time * 2.0f;
 
 	vel[0] = vel[1] = vel[2] = 0.0f;
 
