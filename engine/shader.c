@@ -24,7 +24,7 @@ void parse_shader(const char *file, char **vs_dst, char **fs_dst)
 	int linenum;
 
 	if (!(fd = fopen(file, "r"))) {
-		fprintf(stderr, "error opening file\n");
+		fprintf(stderr, "Error opening file\n");
 		exit_game(EXIT_FAILURE);
 	}
 
@@ -35,12 +35,12 @@ void parse_shader(const char *file, char **vs_dst, char **fs_dst)
 	*fs_dst = (char *)malloc(sizeof(char) * len);
 
 	if (!vs_dst) {
-		fprintf(stderr, "error allocating vertex shader buffer\n");
+		fprintf(stderr, "Error allocating vertex shader buffer\n");
 		exit_game(EXIT_FAILURE);
 	}
 
 	if (!fs_dst) {
-		fprintf(stderr, "error allocating fragment shader buffer\n");
+		fprintf(stderr, "Error allocating fragment shader buffer\n");
 		exit_game(EXIT_FAILURE);
 	}
 
@@ -50,7 +50,7 @@ void parse_shader(const char *file, char **vs_dst, char **fs_dst)
 	for (linenum = 0;; linenum++) {
 		getline(&line, &n, fd); // automatically allocates line
 		if (ferror(fd)) {
-			fprintf(stderr, "error reading from %s: %s\n", file, strerror(errno));
+			fprintf(stderr, "Error reading from %s: %s\n", file, strerror(errno));
 			exit_game(EXIT_FAILURE);
 		}
 
@@ -66,7 +66,7 @@ void parse_shader(const char *file, char **vs_dst, char **fs_dst)
 			} else if (strncmp(arg, "fragment", 8) == 0) {
 				t = FRAGMENT;
 			} else {
-				fprintf(stderr, "error in %s\n", file);
+				fprintf(stderr, "Error in %s\n", file);
 				fprintf(stderr, "(line %d): %s", linenum, line);
 				exit_game(EXIT_FAILURE);
 			}
@@ -97,7 +97,7 @@ GLuint compile_shader(GLenum type, const char *src)
 		glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &len);
 		errmsg = (char *)alloca(len * sizeof(char));
 		glGetShaderInfoLog(shader, len, NULL, errmsg);
-		die("error compiling shader: %s\n", errmsg);
+		die("Error compiling shader: %s\n", errmsg);
 	}
 
 	return shader;
@@ -129,7 +129,7 @@ VertexBuffer *create_vb(const void *data, size_t size, unsigned int type, size_t
 
 	vb = (VertexBuffer *)malloc(sizeof(VertexBuffer));
 	if (vb == NULL)
-		die("error allocating space for vertex buffer");
+		die("Error allocating space for vertex buffer");
 	vb->data = data;
 	vb->size = size;
 	vb->type = type;
@@ -154,7 +154,7 @@ VertexBufferLayout *create_vb_layout(const VertexBuffer *vb, unsigned int max_co
 
 	layout = (VertexBufferLayout *)malloc(sizeof(VertexBufferLayout));
 	if (layout == NULL)
-		die("error allocating space for vertex buffer");
+		die("Error allocating space for vertex buffer");
 	layout->elems = (struct BufferElement *)malloc(sizeof(struct BufferElement) * max_count);
 	layout->count = 0;
 	layout->max_count = max_count;
@@ -173,7 +173,7 @@ void destroy_vb_layout(VertexBufferLayout *layout)
 void vb_layout_add(VertexBufferLayout *layout, const char *name, unsigned int count)
 {
 	if (layout->count >= layout->max_count)
-		die("buffer layout exceeded maximum number of elements: %s", strerror(errno));
+		die("Buffer layout exceeded maximum number of elements: %s", strerror(errno));
 
 	layout->elems[layout->count].name = name;
 	layout->elems[layout->count].count = count;
@@ -189,11 +189,11 @@ VertexArray *create_va(unsigned int init_count)
 
 	va = (VertexArray *)malloc(sizeof(VertexArray));
 	if (va == NULL)
-		die("error allocating space for vertex array: %s", strerror(errno));
+		die("Error allocating space for vertex array: %s", strerror(errno));
 
 	va->layouts = (const VertexBufferLayout **)malloc(init_count * sizeof(VertexBufferLayout *));
 	if (va->layouts == NULL)
-		die("error allocating space for buffer layouts: %s", strerror(errno));
+		die("Error allocating space for buffer layouts: %s", strerror(errno));
 
 	va->count = 0;
 	va->max_count = init_count;
@@ -216,7 +216,7 @@ void va_add(VertexArray *va, const VertexBufferLayout *layout)
 		va->max_count *= 2;
 		va->layouts = (const VertexBufferLayout **)realloc(va->layouts, va->max_count * sizeof(VertexBufferLayout *));
 		if (va->layouts == NULL)
-			die("error reallocating space for buffer layouts: %s", strerror(errno));
+			die("Error reallocating space for buffer layouts: %s", strerror(errno));
 	}
 
 	va->layouts[va->count] = layout;
@@ -233,7 +233,7 @@ void va_use_shader(VertexArray *va, uint shader)
 		layout = va->layouts[i];
 
 		if (layout->count != layout->max_count)
-			printf("warning: layout not using max element count\n");
+			printf("Warning: layout not using max element count\n");
 
 		glBindBuffer(GL_ARRAY_BUFFER, layout->vb->id);
 		glUseProgram(shader);

@@ -1,4 +1,4 @@
-this is a simple shader
+This is a simple shader
 
 #shader vertex
 #version 330 core

@@ -24,7 +24,7 @@ static void check_glx_version(void)
 	int glx_minor;
 
 	if (!glXQueryVersion(display, &glx_major, &glx_minor) || (glx_major == 1 && glx_minor < 3) || glx_major < 1)
-		die("invalid GLX version (%d, %d)\n", glx_major, glx_minor);
+		die("Invalid GLX version (%d, %d)\n", glx_major, glx_minor);
 }
 
 static void match_fb_configs(GLXFBConfig **fbc, int *fbcnt)
@@ -44,11 +44,11 @@ static void match_fb_configs(GLXFBConfig **fbc, int *fbcnt)
 		None
 	};
 
-	printf("getting matching framebuffer configs\n");
+	printf("Getting matching framebuffer configs\n");
 	*fbc = glXChooseFBConfig(display, screen_id, visual_attribs, fbcnt);
 	if (!fbc)
-		die("failed to retrieve framebuffer config\n");
-	printf("found %d matching FB configs\n", *fbcnt);
+		die("Failed to retrieve framebuffer config\n");
+	printf("Found %d matching FB configs\n", *fbcnt);
 }
 
 static GLXFBConfig get_best_fb_config(GLXFBConfig *fbc, int fbcnt)
@@ -62,7 +62,7 @@ static GLXFBConfig get_best_fb_config(GLXFBConfig *fbc, int fbcnt)
 	int samp_buf;
 	int samples;
 
-	printf("getting XVisualInfos\n");
+	printf("Getting XVisualInfos\n");
 	for (i = 0; i < fbcnt; ++i) {
 		vi = glXGetVisualFromFBConfig(display, fbc[i]);
 		if (!vi)
@@ -71,7 +71,7 @@ static GLXFBConfig get_best_fb_config(GLXFBConfig *fbc, int fbcnt)
 		glXGetFBConfigAttrib(display, fbc[i], GLX_SAMPLE_BUFFERS, &samp_buf);
 		glXGetFBConfigAttrib(display, fbc[i], GLX_SAMPLES, &samples);
 
-		printf("matching fbconfig %d, visual ID 0x%2x: SAMPLE_BUFFERS = %d, SAMPLE = %d\n",
+		printf("Matching fbconfig %d, visual ID 0x%2x: SAMPLE_BUFFERS = %d, SAMPLE = %d\n",
 		       i, vi->visualid, samp_buf, samples);
 
 		if (best_fbc < 0 || samp_buf && samples > best_num_samp) {
@@ -123,11 +123,11 @@ static void create_window(XVisualInfo *vi, unsigned int w, unsigned int h)
 	                       vi->depth, InputOutput, vi->visual,
 	                       CWColormap | CWEventMask, &swa);
 	if (!window)
-		die("failed to create window\n");
+		die("Failed to create window\n");
 	delete_window = XInternAtom(display, "WM_DELETE_WINDOW", 0);
 	XSetWMProtocols(display, window, &delete_window, 1);
 	XStoreName(display, window, "OpenGl & Xlib test");
-	printf("mapping window\n");
+	printf("Mapping window\n");
 	XMapWindow(display, window);
 
 	black.red = black.green = black.blue = 0;
@@ -193,7 +193,7 @@ static void create_context(GLXFBConfig fbc)
 		printf("glXCreateContextAttribsARB() not found ... using old-style GLX context\n");
 		render_context = glXCreateNewContext(display, fbc, GLX_RGBA_TYPE, 0, True);
 	} else {
-		printf("creating context\n");
+		printf("Creating context\n");
 		render_context = glXCreateContextAttribsARB(display, fbc, 0, True, ctxattr);
 		XFlush(display);
 		if (context_error || !render_context) {
@@ -209,14 +209,14 @@ static void create_context(GLXFBConfig fbc)
 	XSetErrorHandler(old_error_handler);
 
 	if (context_error || !render_context)
-		die("failed to create OpenGL context\n");
+		die("Failed to create OpenGL context\n");
 
 	if (glXIsDirect(display, render_context))
-		printf("direct GLX rendering context obtained\n");
+		printf("Direct GLX rendering context obtained\n");
 	else
-		printf("indirect GLX rendering context obtained\n");
+		printf("Indirect GLX rendering context obtained\n");
 
-	printf("making context current\n");
+	printf("Making context current\n");
 	glXMakeCurrent(display, window, render_context);
 }
 
@@ -227,19 +227,19 @@ void engine_create_window(unsigned int w, unsigned int h)
 	XVisualInfo *vi;
 
 	if (!(display = XOpenDisplay(NULL)))
-		die("cannot open display\n");
+		die("Cannot open display\n");
 
 	screen_id = DefaultScreen(display);
 	root_window = RootWindow(display, screen_id);
 
 	fbc = get_fb_config();
 	vi = glXGetVisualFromFBConfig(display, fbc);
-	printf("chosen visual id = 0x%x\n", vi->visualid);
+	printf("Chosen visual id = 0x%x\n", vi->visualid);
 	create_window(vi, w, h);
 	XFree(vi);
 	create_context(fbc);
 
-	printf("initializing glew\n");
+	printf("Initializing GLEW\n");
 	glewExperimental = GL_TRUE;
 	GLuint error = glewInit();
 	if (error != GLEW_OK)

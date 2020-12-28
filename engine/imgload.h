@@ -6,7 +6,7 @@
 enum img_err { IMG_ERR_NONE, IMG_ERR_OPEN, IMG_ERR_TYPE, IMG_ERR_MODE };
 enum color_mode { IMG_G = 1, IMG_GA = 2, IMG_RGB = 3, IMG_RGBA = 4 };
 
-struct TGA_File {
+struct tga_file {
 	unsigned char type;
 	short int width;
 	short int height;
@@ -18,6 +18,6 @@ struct TGA_File {
 enum img_err img_err = IMG_ERR_NONE;
 
 char *img_strerror(enum img_err img_err);
-bool load_tga_file(struct TGA_File *img, const char *filename);
+bool load_tga_file(struct tga_file *img, const char *filename);
 
 #endif

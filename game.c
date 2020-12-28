@@ -1,7 +1,7 @@
 /* TODO:
- * change error messages to start with capital letter
- * change struct names to snake casing instead of camel casing
+ * format folder for tga and obj code
  * different types of meshes (such as coloured, textured, etc.)
+ * VBO from mesh
  * default shaders for meshes
  * draw functions for meshes
  * lighting
@@ -38,7 +38,8 @@
 #include <engine/mesh.h>
 
 static uint shader_program;
-struct mesh mesh;
+static uint mesh_shader_program;
+static struct raw_mesh raw_mesh;
 static VertexBuffer *vb;
 static VertexBuffer *mesh_vb;
 static VertexBufferLayout *vb_layout;
@@ -46,10 +47,9 @@ static VertexBufferLayout *mesh_vb_layout;
 static VertexArray *va;
 static VertexArray *mesh_va;
 static uint ib;
-static uint mesh_ib;
-static struct TGA_File test_image;
+static struct tga_file test_image;
 static uint tex;
-static struct Camera cam = {
+static struct camera cam = {
 	.x = 0.0f, .y = 0.0f, .z = 3.0f,
 	.angle_x = 0.0f, .angle_y = 0.0f, .angle_z = 0.0f,
 	.fovx = 1.570796f,
@@ -194,7 +194,7 @@ void rot(float a, float b)
 		cam.angle_x = -M_PI / 2.0f;
 }
 
-void mouse_move(struct MouseMove m)
+void mouse_move(struct mouse_move m)
 {
 	rot((float)m.x * -0.02f, (float)m.y * -0.02f);
 }
@@ -217,23 +217,26 @@ void setup(void)
 	free(vs_src);
 	free(fs_src);
 
+	parse_shader("res/shaders/mesh.glsl", &vs_src, &fs_src);
+	mesh_shader_program = create_shader_program(vs_src, fs_src);
+	free(vs_src);
+	free(fs_src);
+
 	/* Load mesh */
-	struct OBJ_FILE file;
-	load_obj_file(&file, "res/models/monke.obj");
-	mesh_from_obj_file(&mesh, &file);
+	struct obj_file file;
+	struct simple_mesh mesh;
+	load_obj_file(&file, "res/models/test.obj");
+	simple_mesh_from_obj_file(&mesh, &file);
+	raw_mesh_from_simple_mesh(&raw_mesh, &mesh);
+	destroy_simple_mesh(&mesh);
 
 	/* Create cube */
 	va = create_va(1);
-
 	vb = create_vb(vertices, sizeof(vertices), GL_FLOAT, sizeof(float));
-	mesh_vb = create_vb(mesh.vertices, mesh.vertices_size * sizeof(struct vertex), GL_FLOAT, sizeof(float));
-
 	vb_layout = create_vb_layout(vb, 2);
 	vb_layout_add(vb_layout, "position", 3);
 	vb_layout_add(vb_layout, "vcolor", 3);
-
 	va_add(va, vb_layout);
-
 	va_use_shader(va, shader_program);
 
 	glGenBuffers(1, &ib);
@@ -242,17 +245,16 @@ void setup(void)
 
 	/* Create mesh */
 	mesh_va = create_va(1);
-
-	mesh_vb_layout = create_vb_layout(mesh_vb, 1);
+	mesh_vb = create_vb(raw_mesh.data, raw_mesh.buf_size, GL_FLOAT, sizeof(float));
+	mesh_vb_layout = create_vb_layout(mesh_vb, 2);
 	vb_layout_add(mesh_vb_layout, "position", 3);
-
+	vb_layout_add(mesh_vb_layout, "normal", 3);
 	va_add(mesh_va, mesh_vb_layout);
+	va_use_shader(mesh_va, mesh_shader_program);
 
-	va_use_shader(mesh_va, shader_program);
-
-	glGenBuffers(1, &mesh_ib);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_ib);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh.faces_size * sizeof(uint), mesh.faces, GL_STATIC_DRAW);
+	//glGenBuffers(1, &mesh_ib);
+	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_ib);
+	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh.faces_size * 3 * sizeof(uint), raw_mesh.faces.indeces, GL_STATIC_DRAW);
 
 	/* Load image */
 	if (!load_tga_file(&test_image, "res/textures/test.tga"))
@@ -328,6 +330,7 @@ void render(void)
 	float projt[4][4], modelt[4][4], mesh_modelt[4][4], viewt[4][4];
 	float i[4][4];
 	int proj_uni, model_uni, view_uni, override_color_uni;
+	int mesh_proj_uni, mesh_model_uni, mesh_view_uni, mesh_color_uni;
 	float aspect;
 
 	identity(4, 4, i);
@@ -341,39 +344,61 @@ void render(void)
 	projection(proj, aspect);
 	matrix_matrix_product(4, 4, 4, model, cube_rot, cube_init_transform);
 
-	/* OpenGl uses column-major order (I found out the hard way) */
+	/* OpenGL uses column-major order (I found out the hard way) */
 	transpose(4, 4, modelt, model);
 	transpose(4, 4, mesh_modelt, mesh_model);
 	transpose(4, 4, viewt, view);
 	transpose(4, 4, projt, proj);
 
+	/* Draw cube */
+	va_bind(va);
+
+	glUseProgram(shader_program);
+
 	model_uni = glGetUniformLocation(shader_program, "model");
-	glUniformMatrix4fv(model_uni, 1, GL_FALSE, (float *)modelt);
-
 	view_uni = glGetUniformLocation(shader_program, "view");
-	glUniformMatrix4fv(view_uni, 1, GL_FALSE, (float *)viewt);
-
 	proj_uni = glGetUniformLocation(shader_program, "proj");
-	glUniformMatrix4fv(proj_uni, 1, GL_FALSE, (float *)projt);
-
 	override_color_uni = glGetUniformLocation(shader_program, "override_color");
+
+	glUniformMatrix4fv(model_uni, 1, GL_FALSE, (float *)modelt);
+	glUniformMatrix4fv(view_uni, 1, GL_FALSE, (float *)viewt);
+	glUniformMatrix4fv(proj_uni, 1, GL_FALSE, (float *)projt);
 	glUniform3f(override_color_uni, 1.0f, 1.0f, 1.0f);
 
 	glClearColor(0.0, 0.7, 0.7, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	/* Draw cube */
 	glUniformMatrix4fv(model_uni, 1, GL_FALSE, (float *)modelt);
-	va_bind(va);
 	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
 	/* Draw mesh */
 	va_bind(mesh_va);
-	glUniformMatrix4fv(model_uni, 1, GL_FALSE, (float *)mesh_modelt);
-	glDrawElements(GL_TRIANGLES, mesh.faces_size, GL_UNSIGNED_INT, 0);
+	glUseProgram(mesh_shader_program);
+
+	mesh_model_uni = glGetUniformLocation(mesh_shader_program, "model");
+	mesh_view_uni  = glGetUniformLocation(mesh_shader_program, "view");
+	mesh_proj_uni  = glGetUniformLocation(mesh_shader_program, "proj");
+	mesh_color_uni = glGetUniformLocation(mesh_shader_program, "color");
+
+	glUniformMatrix4fv(mesh_model_uni, 1, GL_FALSE, (float *)mesh_modelt);
+	glUniformMatrix4fv(mesh_view_uni, 1, GL_FALSE, (float *)viewt);
+	glUniformMatrix4fv(mesh_proj_uni, 1, GL_FALSE, (float *)projt);
+	glUniform3f(mesh_color_uni, 1.0f, 1.0f, 1.0f);
+
+	//glDrawElements(GL_TRIANGLES, mesh.faces_size * 3, GL_UNSIGNED_INT, 0);
+	//glDrawArrays(GL_TRIANGLES, 0, raw_mesh.buf_size / sizeof(float) / 6);
+	glDrawArrays(GL_TRIANGLES, 0, raw_mesh.buf_size / sizeof(float) / 6);
+
+	/* Wireframe */
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glUniform3f(mesh_color_uni, 0.0f, 0.0f, 0.0f);
+	//glDrawElements(GL_TRIANGLES, mesh.faces_size * 3, GL_UNSIGNED_INT, 0);
+	glDrawArrays(GL_TRIANGLES, 0, raw_mesh.buf_size / sizeof(float) / 6);
+	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 
 	/* Draw floor and reflection */
 	va_bind(va);
+	glUseProgram(shader_program);
 	/* Only draw reflection when you can see it, i.e. if the camera is above the plane */
 	if (current_camera->y > -0.5f) { 
 		/* Enable the stencil test to only draw the reflection on the floor pane */
@@ -429,12 +454,12 @@ void cleanup(void)
 	destroy_vb_layout(mesh_vb_layout);
 	destroy_va(va);
 	destroy_va(mesh_va);
-	destroy_mesh(&mesh);
+	destroy_raw_mesh(&raw_mesh);
 }
 
 int main(int argc, char *argv[])
 {
-	struct GameState game_state = { setup, update, render, cleanup };
+	struct game_state game_state = { setup, update, render, cleanup };
 
 	engine_set_current_state(game_state);
 	engine_run();

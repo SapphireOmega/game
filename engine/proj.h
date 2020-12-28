@@ -7,7 +7,7 @@
 enum proj_type { PERSP, ORTHO };
 
 /* structs */
-struct Camera {
+struct camera {
 	float x, y, z;
 	float angle_x, angle_y, angle_z;
 	float fovx;
@@ -16,7 +16,7 @@ struct Camera {
 };
 
 /* variables */
-struct Camera *current_camera;
+struct camera *current_camera;
 
 /* functions */
 //void fps_view(Matrix res);

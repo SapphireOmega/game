@@ -6,18 +6,44 @@
 #include "engine.h"
 #include "obj.h"
 
-struct vertex {
+struct simple_vertex {
 	float pos[3];
 };
 
-struct mesh {
-	size_t vertices_size;
-	size_t faces_size;
-	struct vertex *vertices;
-	uint *faces;
+struct textured_vertex {
+	float pos[3];
+	float uv[2];
 };
 
-void mesh_from_obj_file(struct mesh *mesh, const struct OBJ_FILE *file);
-void destroy_mesh(struct mesh *mesh);
+struct face {
+	uint indices[3];
+	float normal[3];
+};
+
+struct simple_mesh {
+	uint n_vertices;
+	uint n_faces;
+	struct simple_vertex *vertices;
+	struct face *faces;
+};
+
+struct textured_mesh {
+	uint n_vertices;
+	uint n_faces;
+	struct textured_vertex *vertices;
+	struct face *faces;
+};
+
+struct raw_mesh {
+	float *data;
+	size_t buf_size;
+};
+
+void simple_mesh_from_obj_file(struct simple_mesh *mesh, const struct obj_file *file);
+
+void raw_mesh_from_simple_mesh(struct raw_mesh *res, const struct simple_mesh *mesh);
+
+void destroy_simple_mesh(struct simple_mesh *mesh);
+void destroy_raw_mesh(struct raw_mesh *mesh);
 
 #endif // MESH_H

@@ -22,9 +22,9 @@ static void (*handler[LASTEvent])(XEvent *e) = {
 	[MotionNotify] = mouse_motion,
 };
 
-struct KeyHandler key_handler;
-struct Mouse mouse;
-struct MouseHandler mouse_handler;
+struct key_handler key_handler;
+struct mouse mouse;
+struct mouse_handler mouse_handler;
 
 static void expose(XEvent *e)
 {
@@ -79,7 +79,7 @@ static Bool predicate(Display *display, XEvent *event, char *arg)
 
 static void mouse_motion(XEvent *e)
 {
-	struct MouseMove move;
+	struct mouse_move move;
 	int x = ((XMotionEvent *)e)->x, y = ((XMotionEvent *)e)->y;
 	int d; // dummy
 	Window rw; // dummy
@@ -102,8 +102,8 @@ static void mouse_motion(XEvent *e)
 bool init_keys(char **err)
 {
 	key_handler.n = 0;
-	key_handler.size = 20 * sizeof(struct Key);
-	key_handler.keys = (struct Key *)malloc(key_handler.size);
+	key_handler.size = 20 * sizeof(struct key);
+	key_handler.keys = (struct key *)malloc(key_handler.size);
 	if (!key_handler.keys) {
 		*err = strerror(errno);
 		return false;
@@ -115,11 +115,9 @@ bool init_keys(char **err)
 bool add_key(char **err, KeySym keysym, void (*on_press)(void), void (*on_release)(void), void (*while_pressed)(void))
 {
 	key_handler.n++;
-	if (key_handler.n * sizeof(struct Key) > key_handler.size) {
-		key_handler.size = key_handler.n * sizeof(struct Key);
-		key_handler.keys = \
-			(struct Key *) \
-			realloc(key_handler.keys, key_handler.size);
+	if (key_handler.n * sizeof(struct key) > key_handler.size) {
+		key_handler.size = key_handler.n * sizeof(struct key);
+		key_handler.keys = (struct key *)realloc(key_handler.keys, key_handler.size);
 		if (!key_handler.keys) {
 			*err = strerror(errno);
 			return false;

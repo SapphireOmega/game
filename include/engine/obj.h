@@ -2,16 +2,22 @@
 #define OBJ_H
 
 #include <stdlib.h>
+#include <stdbool.h>
 
 #include "engine.h"
 
-struct OBJ_FILE {
-	size_t v_size;
-	size_t f_size;
-	float *vs;
-	uint  *fs;
+struct obj_file {
+	size_t vs_size;
+	size_t vns_size;
+	size_t fs_size;
+	float  *vs;
+	float  *vns;
+	uint   *fs;
+	uint   *vns_indices;
 };
 
-void load_obj_file(struct OBJ_FILE *file, const char *filename);
+void load_obj_file(struct obj_file *file, const char *filename);
+
+void destroy_obj_file(struct obj_file *file);
 
 #endif // OBJ_H
