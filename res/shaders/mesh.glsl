@@ -3,36 +3,45 @@ This is a simple shader for simple meshes
 #shader vertex
 #version 330 core
 
-in vec3 position;
-in vec3 normal;
+in vec3 pos;
+in vec3 norm;
 
-out vec3 fcolor;
-out vec3 fnormal;
+out vec3 fpos;
+out vec3 fnorm;
 
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 proj;
 
-uniform vec3 color;
-
 void main()
 {
-	float ambient_strength = 0.9;
+	fpos = vec3(model * vec4(pos, 1.0));
+	fnorm = mat3(transpose(inverse(model))) * norm;
 
-	fcolor = color * ambient_strength;
-	fnormal = normal;
-	gl_Position = proj * view * model * vec4(position, 1.0);
+	gl_Position = proj * view * model * vec4(pos, 1.0);
 }
 
 #shader fragment
 #version 330 core
 
-in vec3 fcolor;
-in vec3 fnormal;
+in vec3 fpos;
+in vec3 fnorm;
 
-out vec4 out_color;
+out vec4 out_col;
+
+uniform vec3 light_pos;
+uniform vec3 light_col;
+uniform vec3 obj_col;
 
 void main()
 {
-	out_color = vec4(fcolor, 1.0);
+	float ambient_strength = 0.1;
+	vec3 ambient = ambient_strength * light_col;
+
+	vec3 norm = normalize(fnorm);
+	vec3 light_dir = normalize(light_pos - fpos);
+	float diff = max(dot(norm, light_dir), 0.0);
+	vec3 diffuse = diff * light_col;
+
+	out_col = vec4((ambient + diffuse) * obj_col, 1.0);
 }

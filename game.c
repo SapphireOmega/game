@@ -42,8 +42,10 @@ static uint mesh_shader_program;
 static struct raw_mesh raw_mesh;
 static VertexBuffer *vb;
 static VertexBuffer *mesh_vb;
+static VertexBuffer *light_vb;
 static VertexBufferLayout *vb_layout;
 static VertexBufferLayout *mesh_vb_layout;
+static VertexBufferLayout *light_vb_layout;
 static VertexArray *va;
 static VertexArray *mesh_va;
 static uint ib;
@@ -78,6 +80,46 @@ static const float vertices[] = {
 	-1.0f, -0.5f,  1.0f, 1.0f, 0.4f, 1.0f,
 };
 
+static struct {
+	float pos[3];
+	float col[3];
+} light = {
+	{ 0.0f, 2.0f, 0.0f },
+	{ 1.0f, 1.0f, 1.0f },
+};
+
+static struct simple_vertex light_vertices[8] = {
+	{{  0.1f,  0.1f,  0.1f }},
+	{{  0.1f, -0.1f,  0.1f }},
+	{{ -0.1f, -0.1f,  0.1f }},
+	{{ -0.1f,  0.1f,  0.1f }},
+
+	{{  0.1f,  0.1f, -0.1f }},
+	{{  0.1f, -0.1f, -0.1f }},
+	{{ -0.1f, -0.1f, -0.1f }},
+	{{ -0.1f,  0.1f, -0.1f }},
+};
+
+static struct face light_faces[12] = {
+	{{ 0, 1, 2 }, {  0.0f,  0.0f,  1.0f }}, {{ 2, 3, 0 }, {  0.0f,  0.0f,  1.0f }}, // front
+	{{ 4, 5, 1 }, {  1.0f,  0.0f,  0.0f }}, {{ 1, 0, 4 }, {  1.0f,  0.0f,  0.0f }}, // right
+	{{ 7, 6, 5 }, {  0.0f,  0.0f, -1.0f }}, {{ 5, 4, 7 }, {  0.0f,  0.0f, -0.0f }}, // back
+	{{ 3, 2, 6 }, { -1.0f,  0.0f,  0.0f }}, {{ 6, 7, 3 }, { -1.0f,  0.0f,  0.0f }}, // left
+	{{ 4, 0, 3 }, {  0.0f,  1.0f,  0.0f }}, {{ 3, 7, 4 }, {  0.0f,  1.0f,  0.0f }}, // top
+	{{ 1, 5, 6 }, {  0.0f, -1.0f,  0.0f }}, {{ 6, 2, 1 }, {  0.0f, -1.0f,  0.0f }}, // bottom
+};
+
+static struct simple_mesh light_mesh = {
+	.n_vertices = 8,
+	.n_faces = 12,
+	.vertices = (struct simple_vertex *)&light_vertices,
+	.faces = (struct face *)&light_faces,
+};
+
+static struct raw_mesh light_raw_mesh;
+
+static float a = 0.0f;
+
 //static const float vertices[] = {
 ///*      pos                  color             texcoords */
 //	/* front */
@@ -100,7 +142,7 @@ static const float vertices[] = {
 //	-0.5f,  0.5f, -0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
 //	-0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
 //	-0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
-//	-0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
+//	-0.5f,0-0.5f,  0.5f, 1.0f, 1.0f, 0.5f, 1.0f, 0.0f,
 //	-0.5f, -0.5f, -0.5f, 1.0f, 0.5f, 0.5f, 0.0f, 0.0f,
 //	-0.5f,  0.5f, -0.5f, 1.0f, 0.5f, 1.0f, 0.0f, 1.0f,
 //
@@ -225,10 +267,12 @@ void setup(void)
 	/* Load mesh */
 	struct obj_file file;
 	struct simple_mesh mesh;
-	load_obj_file(&file, "res/models/test.obj");
+	load_obj_file(&file, "res/models/spaceship.obj");
 	simple_mesh_from_obj_file(&mesh, &file);
 	raw_mesh_from_simple_mesh(&raw_mesh, &mesh);
 	destroy_simple_mesh(&mesh);
+
+	raw_mesh_from_simple_mesh(&light_raw_mesh, &light_mesh);
 
 	/* Create cube */
 	va = create_va(1);
@@ -244,17 +288,21 @@ void setup(void)
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 	/* Create mesh */
-	mesh_va = create_va(1);
+	mesh_va = create_va(2);
+
 	mesh_vb = create_vb(raw_mesh.data, raw_mesh.buf_size, GL_FLOAT, sizeof(float));
 	mesh_vb_layout = create_vb_layout(mesh_vb, 2);
-	vb_layout_add(mesh_vb_layout, "position", 3);
-	vb_layout_add(mesh_vb_layout, "normal", 3);
+	vb_layout_add(mesh_vb_layout, "pos", 3);
+	vb_layout_add(mesh_vb_layout, "norm", 3);
+
+	light_vb = create_vb(light_raw_mesh.data, light_raw_mesh.buf_size, GL_FLOAT, sizeof(float));
+	light_vb_layout = create_vb_layout(light_vb, 2);
+	vb_layout_add(light_vb_layout, "pos", 3);
+	vb_layout_add(light_vb_layout, "norm", 3);
+
+	va_add(mesh_va, light_vb_layout);
 	va_add(mesh_va, mesh_vb_layout);
 	va_use_shader(mesh_va, mesh_shader_program);
-
-	//glGenBuffers(1, &mesh_ib);
-	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_ib);
-	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh.faces_size * 3 * sizeof(uint), raw_mesh.faces.indeces, GL_STATIC_DRAW);
 
 	/* Load image */
 	if (!load_tga_file(&test_image, "res/textures/test.tga"))
@@ -322,31 +370,39 @@ void update(void)
 	rotation_3d_homogeneous(d_cube_rot, cube_rot_axis, 1.0f * delta_time);
 	matrix_matrix_product(4, 4, 4, tmp, d_cube_rot, cube_rot);
 	memcpy(cube_rot, tmp, 16 * sizeof(float));
+
+	a += delta_time;
+	if (a >= 2 * M_PI)
+		a -= 2 * M_PI;
+
+	light.pos[0] = 5.0f * sinf(a);
+	light.pos[2] = 5.0f * cosf(a);
 }
 
 void render(void)
 {
-	float proj[4][4], model[4][4], mesh_model[4][4], view[4][4];
-	float projt[4][4], modelt[4][4], mesh_modelt[4][4], viewt[4][4];
+	float proj[4][4], model[4][4], mesh_model[4][4], light_model[4][4], view[4][4];
+	float projt[4][4], modelt[4][4], mesh_modelt[4][4], light_modelt[4][4], viewt[4][4];
 	float i[4][4];
-	int proj_uni, model_uni, view_uni, override_color_uni;
-	int mesh_proj_uni, mesh_model_uni, mesh_view_uni, mesh_color_uni;
-	float aspect;
 
 	identity(4, 4, i);
 
-	float mesh_model_transl[3] = { 3.0f, 0.0f, 0.0f };
+	float mesh_model_transl[3] = { 4.0f, 0.0f, -4.0f };
 	identity(4, 4, mesh_model);
 	add_translation(3, mesh_model, mesh_model, mesh_model_transl);
 
+	identity(4, 4, light_model);
+	add_translation(3, light_model, light_model, light.pos);
+
 	fps_view(view);
-	aspect = (float)window_attribs.width / (float)window_attribs.height;
+	float aspect = (float)window_attribs.width / (float)window_attribs.height;
 	projection(proj, aspect);
 	matrix_matrix_product(4, 4, 4, model, cube_rot, cube_init_transform);
 
 	/* OpenGL uses column-major order (I found out the hard way) */
 	transpose(4, 4, modelt, model);
 	transpose(4, 4, mesh_modelt, mesh_model);
+	transpose(4, 4, light_modelt, light_model);
 	transpose(4, 4, viewt, view);
 	transpose(4, 4, projt, proj);
 
@@ -355,46 +411,60 @@ void render(void)
 
 	glUseProgram(shader_program);
 
-	model_uni = glGetUniformLocation(shader_program, "model");
-	view_uni = glGetUniformLocation(shader_program, "view");
-	proj_uni = glGetUniformLocation(shader_program, "proj");
-	override_color_uni = glGetUniformLocation(shader_program, "override_color");
+	int model_uni = glGetUniformLocation(shader_program, "model");
+	int view_uni = glGetUniformLocation(shader_program, "view");
+	int proj_uni = glGetUniformLocation(shader_program, "proj");
+	int override_color_uni = glGetUniformLocation(shader_program, "override_color");
 
 	glUniformMatrix4fv(model_uni, 1, GL_FALSE, (float *)modelt);
 	glUniformMatrix4fv(view_uni, 1, GL_FALSE, (float *)viewt);
 	glUniformMatrix4fv(proj_uni, 1, GL_FALSE, (float *)projt);
 	glUniform3f(override_color_uni, 1.0f, 1.0f, 1.0f);
 
-	glClearColor(0.0, 0.7, 0.7, 1.0);
+	//glClearColor(0.0, 0.7, 0.7, 1.0);
+	glClearColor(0.0, 0.0, 0.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glUniformMatrix4fv(model_uni, 1, GL_FALSE, (float *)modelt);
 	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
-	/* Draw mesh */
+	/* Draw mesh and light */
 	va_bind(mesh_va);
 	glUseProgram(mesh_shader_program);
 
-	mesh_model_uni = glGetUniformLocation(mesh_shader_program, "model");
-	mesh_view_uni  = glGetUniformLocation(mesh_shader_program, "view");
-	mesh_proj_uni  = glGetUniformLocation(mesh_shader_program, "proj");
-	mesh_color_uni = glGetUniformLocation(mesh_shader_program, "color");
+	glEnable(GL_CULL_FACE);
+
+	int mesh_model_uni = glGetUniformLocation(mesh_shader_program, "model");
+	int mesh_view_uni  = glGetUniformLocation(mesh_shader_program, "view");
+	int mesh_proj_uni  = glGetUniformLocation(mesh_shader_program, "proj");
+
+	int mesh_light_pos_uni = glGetUniformLocation(mesh_shader_program, "light_pos");
+	int mesh_light_col_uni = glGetUniformLocation(mesh_shader_program, "light_col");
+	int mesh_col_uni = glGetUniformLocation(mesh_shader_program, "obj_col");
 
 	glUniformMatrix4fv(mesh_model_uni, 1, GL_FALSE, (float *)mesh_modelt);
 	glUniformMatrix4fv(mesh_view_uni, 1, GL_FALSE, (float *)viewt);
 	glUniformMatrix4fv(mesh_proj_uni, 1, GL_FALSE, (float *)projt);
-	glUniform3f(mesh_color_uni, 1.0f, 1.0f, 1.0f);
 
-	//glDrawElements(GL_TRIANGLES, mesh.faces_size * 3, GL_UNSIGNED_INT, 0);
-	//glDrawArrays(GL_TRIANGLES, 0, raw_mesh.buf_size / sizeof(float) / 6);
-	glDrawArrays(GL_TRIANGLES, 0, raw_mesh.buf_size / sizeof(float) / 6);
+	glUniform3f(mesh_light_pos_uni, light.pos[0], light.pos[1], light.pos[2]);
+	glUniform3f(mesh_light_col_uni, 1.0f, 1.0f, 1.0f);
+	glUniform3f(mesh_col_uni, 0.8f, 0.4f, 0.0f);
+
+	glBindBuffer(GL_ARRAY_BUFFER, mesh_vb->id);
+	glDrawArrays(GL_TRIANGLES, light_raw_mesh.buf_size / sizeof(float) / 6, raw_mesh.buf_size / sizeof(float) / 6);
+
+	glBindBuffer(GL_ARRAY_BUFFER, light_vb->id);
+	glUniformMatrix4fv(mesh_model_uni, 1, GL_FALSE, (float *)light_modelt);
+	glUniform3f(mesh_col_uni, 1.0f, 1.0f, 1.0f);
+	glDrawArrays(GL_TRIANGLES, 0, light_raw_mesh.buf_size / sizeof(float) / 6);
 
 	/* Wireframe */
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	glUniform3f(mesh_color_uni, 0.0f, 0.0f, 0.0f);
-	//glDrawElements(GL_TRIANGLES, mesh.faces_size * 3, GL_UNSIGNED_INT, 0);
-	glDrawArrays(GL_TRIANGLES, 0, raw_mesh.buf_size / sizeof(float) / 6);
-	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	//glUniform3f(mesh_col_uni, 0.0f, 0.0f, 0.0f);
+	//glDrawArrays(GL_TRIANGLES, 0, raw_mesh.buf_size / sizeof(float) / 6);
+	//glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+
+	glDisable(GL_CULL_FACE);
 
 	/* Draw floor and reflection */
 	va_bind(va);
